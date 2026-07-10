@@ -1,0 +1,6 @@
+{
+  "name": "Turpeencosmetic",
+  "description": "An elegant, high-typography beauty and editorial blog for Turpeen Cosmetics, featuring interactive reading, full product highlights, a dynamic shopping drawer, and custom beauty routine sharing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
