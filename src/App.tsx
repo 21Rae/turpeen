@@ -20,6 +20,7 @@ import ArticleView from './components/ArticleView';
 import ShopDrawer from './components/ShopDrawer';
 import ShareYourRoutine from './components/ShareYourRoutine';
 import ShopView from './components/ShopView';
+import AijayChatbot from './components/AijayChatbot';
 
 interface CartItem {
   product: Product;
@@ -374,6 +375,9 @@ export default function App() {
         onClose={() => setIsShareOpen(false)}
         onAddRoutine={handleAddRoutine}
       />
+
+      {/* Aijay Chatbot Widget */}
+      <AijayChatbot />
 
       {/* Float to Top helper widget */}
       <button
