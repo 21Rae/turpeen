@@ -1,5 +1,6 @@
 import { Article, UserRoutine } from '../types';
 import { Sparkles, Calendar, User } from 'lucide-react';
+import { handleImageError, DEFAULT_FALLBACK_IMAGE } from '../utils/imageParser';
 
 interface LatestSectionProps {
   latestArticles: Article[];
@@ -110,14 +111,15 @@ export default function LatestSection({
                 {isPostcard ? (
                   /* Postcard Layout: 3 side-by-side images */
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                    {article.images.map((img, idx) => (
+                    {(article.images && article.images.length > 0 ? article.images : [DEFAULT_FALLBACK_IMAGE]).map((img, idx) => (
                       <div 
                         key={idx} 
                         className="overflow-hidden aspect-[4/5] bg-neutral-100 relative shadow-sm"
                       >
                         <img
-                          src={img}
+                          src={img || DEFAULT_FALLBACK_IMAGE}
                           alt={`${article.title} gallery ${idx + 1}`}
+                          onError={handleImageError}
                           referrerPolicy="no-referrer"
                           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                         />
@@ -128,8 +130,9 @@ export default function LatestSection({
                   /* Standard Landscape Layout (e.g. Daniela Garza) */
                   <div className="overflow-hidden aspect-video bg-neutral-100 relative shadow-sm">
                     <img
-                      src={article.images[0]}
+                      src={article.images?.[0] || DEFAULT_FALLBACK_IMAGE}
                       alt={article.title}
+                      onError={handleImageError}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                     />

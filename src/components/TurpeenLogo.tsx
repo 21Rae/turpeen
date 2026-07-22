@@ -24,9 +24,9 @@ export function TurpeenLogo({ size = 'md', className = '', color = 'text-black' 
     },
     md: {
       container: 'space-y-0.5',
-      main: 'text-2xl sm:text-[28px] font-black tracking-normal leading-none',
-      sub: 'text-xl sm:text-[22px] font-extrabold tracking-normal leading-none',
-      tm: 'text-[7px] -right-3 -top-0.5',
+      main: 'text-base sm:text-2xl md:text-[28px] font-black tracking-normal leading-none',
+      sub: 'text-xs sm:text-xl md:text-[22px] font-extrabold tracking-normal leading-none',
+      tm: 'text-[4px] sm:text-[7px] -right-2 sm:-right-3 -top-0.5',
     },
     lg: {
       container: 'space-y-1',

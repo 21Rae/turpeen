@@ -9,6 +9,7 @@ interface HeaderProps {
   setSearchQuery: (query: string) => void;
   onOpenShop: () => void;
   onOpenShare: () => void;
+  onOpenCreateArticle?: () => void;
   bookmarksCount: number;
   onShowBookmarks: () => void;
   showBookmarksOnly: boolean;
@@ -21,6 +22,7 @@ export default function Header({
   setSearchQuery,
   onOpenShop,
   onOpenShare,
+  onOpenCreateArticle,
   bookmarksCount,
   onShowBookmarks,
   showBookmarksOnly,
@@ -117,18 +119,18 @@ export default function Header({
             if (showBookmarksOnly) onShowBookmarks();
             setSearchQuery('');
           }}
-          className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center select-none text-center cursor-pointer hover:opacity-85 transition-opacity duration-250"
+          className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center select-none text-center cursor-pointer hover:opacity-85 transition-opacity duration-250 z-10"
         >
-          <TurpeenWordmark className="text-2.5xl sm:text-3.5xl" />
+          <TurpeenWordmark />
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center space-x-2 sm:space-x-4">
+        <div className="flex items-center space-x-1.5 sm:space-x-4">
           {/* Write / Share Top Shelf */}
           <button
             id="share-shelf-btn"
             onClick={onOpenShare}
-            className="flex items-center space-x-1.5 text-xs tracking-widest font-medium uppercase text-gray-600 hover:text-black transition-colors duration-200 cursor-pointer"
+            className="flex items-center space-x-1.5 text-xs tracking-widest font-medium uppercase text-gray-600 hover:text-black transition-colors duration-200 cursor-pointer p-1 sm:p-0"
           >
             <Edit3 className="w-4 h-4 text-rose-500" />
             <span className="hidden lg:inline">Share Routine</span>
@@ -138,7 +140,7 @@ export default function Header({
           <button
             id="bookmarks-toggle-btn"
             onClick={onShowBookmarks}
-            className={`flex items-center space-x-1 p-1.5 rounded-full hover:bg-gray-50 transition-colors duration-200 cursor-pointer relative ${
+            className={`flex items-center space-x-1 p-1 sm:p-1.5 rounded-full hover:bg-gray-50 transition-colors duration-200 cursor-pointer relative ${
               showBookmarksOnly ? 'text-rose-600 bg-rose-50' : 'text-gray-500 hover:text-black'
             }`}
             title="Bookmarked articles"
@@ -155,10 +157,10 @@ export default function Header({
           <button
             id="shop-glossier-btn"
             onClick={onOpenShop}
-            className="bg-black hover:bg-neutral-800 text-white font-mono text-[10px] tracking-widest uppercase px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 flex items-center space-x-1.5 shadow-sm active:scale-95 cursor-pointer"
+            className="bg-black hover:bg-neutral-800 text-white font-mono text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest uppercase px-2.5 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 flex items-center space-x-1 sm:space-x-1.5 shadow-sm active:scale-95 cursor-pointer whitespace-nowrap"
           >
-            <TurpeenIcon className="w-4 h-4 text-rose-300" color="currentColor" />
-            <span>Shop Turpeen</span>
+            <TurpeenIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-300" color="currentColor" />
+            <span>Shop<span className="hidden sm:inline"> Turpeen</span></span>
           </button>
         </div>
       </div>

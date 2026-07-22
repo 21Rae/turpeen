@@ -21,6 +21,9 @@ import ShopDrawer from './components/ShopDrawer';
 import ShareYourRoutine from './components/ShareYourRoutine';
 import ShopView from './components/ShopView';
 import AijayChatbot from './components/AijayChatbot';
+import CreateArticleModal from './components/CreateArticleModal';
+import { getSupabase } from './lib/supabase';
+import { parseImagesFromRow, parseBlocksFromRow } from './utils/imageParser';
 
 interface CartItem {
   product: Product;
@@ -28,6 +31,7 @@ interface CartItem {
 }
 
 export default function App() {
+  const [articles, setArticles] = useState<Article[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [activeCategory, setActiveCategory] = useState<'Interviews' | 'Makeup' | 'Skincare' | 'Hair' | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,11 +41,93 @@ export default function App() {
   // Modals & drawers
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isCreateArticleOpen, setIsCreateArticleOpen] = useState(false);
 
   // Lists & stores
   const [userRoutines, setUserRoutines] = useState<UserRoutine[]>([]);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
+
+  // 1. Fetch articles strictly from Supabase & subscribe to Real-Time INSERT/UPDATE events
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase) return;
+
+    // Fetch initial Supabase articles
+    const fetchArticles = async () => {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (data && !error) {
+        const fetchedArticles: Article[] = data.map((row: any) => ({
+          id: row.id || `art-${Date.now()}`,
+          title: row.title || 'Untitled Post',
+          subtitle: row.subtitle,
+          slug: row.slug || `post-${Date.now()}`,
+          category: row.category || 'Interviews',
+          badge: row.badge || 'THE TOP SHELF',
+          author: row.author || 'Turpeen Editorial',
+          authorTitle: row.author_title,
+          date: row.date || 'Today',
+          readTime: row.read_time || '4 min read',
+          excerpt: row.excerpt || row.title || '',
+          images: parseImagesFromRow(row),
+          blocks: parseBlocksFromRow(row),
+          isHero: row.is_hero ?? false,
+          isSecondaryHero: row.is_secondary_hero ?? false,
+          isLatest: row.is_latest ?? true,
+          isSidebar: row.is_sidebar ?? false,
+          sidebarBadge: row.sidebar_badge,
+        }));
+
+        setArticles(fetchedArticles);
+      } else {
+        setArticles([]);
+      }
+    };
+
+    fetchArticles();
+
+    // Real-Time subscription for new blog posts inserted into Supabase
+    const channel = supabase
+      .channel('public:articles')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'articles' },
+        (payload) => {
+          const row = payload.new;
+          const newArticle: Article = {
+            id: row.id || `art-${Date.now()}`,
+            title: row.title || 'Untitled Post',
+            subtitle: row.subtitle,
+            slug: row.slug || `post-${Date.now()}`,
+            category: row.category || 'Interviews',
+            badge: row.badge || 'THE TOP SHELF',
+            author: row.author || 'Turpeen Editorial',
+            authorTitle: row.author_title,
+            date: row.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            readTime: row.read_time || '4 min read',
+            excerpt: row.excerpt || row.title || '',
+            images: parseImagesFromRow(row),
+            blocks: parseBlocksFromRow(row),
+            isHero: row.is_hero ?? false,
+            isSecondaryHero: row.is_secondary_hero ?? false,
+            isLatest: row.is_latest ?? true,
+            isSidebar: row.is_sidebar ?? false,
+            sidebarBadge: row.sidebar_badge,
+          };
+
+          setArticles((prev) => [newArticle, ...prev.filter((a) => a.id !== newArticle.id)]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Load localStorage state safely on mount
   useEffect(() => {
@@ -161,12 +247,12 @@ export default function App() {
   };
 
   // Filters Calculation
-  const heroArticle = ARTICLES.find(a => a.isHero) || ARTICLES[0];
-  const secondaryHeroArticle = ARTICLES.find(a => a.isSecondaryHero) || ARTICLES[1];
+  const heroArticle = articles.find(a => a.isHero) || articles[0];
+  const secondaryHeroArticle = articles.find(a => a.isSecondaryHero) || articles[1];
 
   // Articles list (excluding heroes for the "Latest" section, matching layout)
-  const regularLatestArticles = ARTICLES.filter(a => !a.isHero && !a.isSecondaryHero && !a.isSidebar);
-  const sidebarArticles = ARTICLES.filter(a => a.isSidebar);
+  const regularLatestArticles = articles.filter(a => !a.isHero && !a.isSecondaryHero && !a.isSidebar);
+  const sidebarArticles = articles.filter(a => a.isSidebar);
 
   // Compute final filtered articles
   const filteredLatestArticles = regularLatestArticles.filter((article) => {
@@ -223,6 +309,7 @@ export default function App() {
         }}
         onOpenShop={() => setCurrentView('shop')}
         onOpenShare={() => setIsShareOpen(true)}
+        onOpenCreateArticle={() => setIsCreateArticleOpen(true)}
         bookmarksCount={bookmarks.length}
         showBookmarksOnly={showBookmarksOnly}
         onShowBookmarks={() => {
@@ -241,6 +328,7 @@ export default function App() {
           /* Detailed Editorial/Article View */
           <ArticleView
             article={selectedArticle}
+            allArticles={articles}
             onBack={() => setSelectedArticle(null)}
             isBookmarked={bookmarks.includes(selectedArticle.id)}
             onToggleBookmark={() => handleToggleBookmark(selectedArticle.id)}
@@ -251,8 +339,8 @@ export default function App() {
           /* Homepage list view */
           <div className="space-y-8 sm:space-y-12">
             
-            {/* Show landing page heroes ONLY if no filters are currently active */}
-            {!activeCategory && !searchQuery && !showBookmarksOnly && (
+            {/* Show landing page heroes ONLY if no filters are currently active and heroArticle exists */}
+            {!activeCategory && !searchQuery && !showBookmarksOnly && heroArticle && (
               <HeroSection
                 heroArticle={heroArticle}
                 secondaryHeroArticle={secondaryHeroArticle}
@@ -374,6 +462,15 @@ export default function App() {
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
         onAddRoutine={handleAddRoutine}
+      />
+
+      {/* Real-time Supabase Blog Post Modal */}
+      <CreateArticleModal
+        isOpen={isCreateArticleOpen}
+        onClose={() => setIsCreateArticleOpen(false)}
+        onArticleCreated={(newArticle) => {
+          setArticles((prev) => [newArticle, ...prev.filter((a) => a.id !== newArticle.id)]);
+        }}
       />
 
       {/* Aijay Chatbot Widget */}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Mail, Facebook, Instagram, Heart, MapPin, Sparkles, BookOpen } from 'lucide-react';
 import { Article } from '../types';
 import { TOP_25_BRANDS } from '../data';
+import { handleImageError, DEFAULT_FALLBACK_IMAGE } from '../utils/imageParser';
 
 interface SidebarProps {
   sidebarArticles: Article[];
@@ -103,8 +104,9 @@ export default function Sidebar({
               {/* Thumbnail Image */}
               <div className="w-16 h-16 shrink-0 bg-neutral-100 overflow-hidden shadow-sm">
                 <img
-                  src={article.images[0]}
+                  src={article.images?.[0] || DEFAULT_FALLBACK_IMAGE}
                   alt={article.title}
+                  onError={handleImageError}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />

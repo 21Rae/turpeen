@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Heart, ArrowLeft, Send, MessageSquare, Share2, BookmarkCheck, Check } from 'lucide-react';
-import { Article, Product } from '../types';
-import { GLOSSIER_PRODUCTS, ARTICLES } from '../data';
+import { Article, Product, ArticleContentBlock } from '../types';
+import { GLOSSIER_PRODUCTS } from '../data';
+import { handleImageError, DEFAULT_FALLBACK_IMAGE, parseBlocksFromRow } from '../utils/imageParser';
 
 interface ArticleViewProps {
   article: Article;
+  allArticles?: Article[];
   onBack: () => void;
   isBookmarked: boolean;
   onToggleBookmark: () => void;
@@ -21,6 +23,7 @@ interface LocalComment {
 
 export default function ArticleView({
   article,
+  allArticles = [],
   onBack,
   isBookmarked,
   onToggleBookmark,
@@ -107,8 +110,17 @@ export default function ArticleView({
     setNewsletterEmail('');
   };
 
+  // Ensure blocks are always parsed and safely available from any database format
+  const blocksToRender: ArticleContentBlock[] = useMemo(() => {
+    if (!article) return [];
+    if (Array.isArray(article.blocks) && article.blocks.length > 0) {
+      return article.blocks;
+    }
+    return parseBlocksFromRow(article);
+  }, [article]);
+
   // Sidebar articles for "DON'T MISS"
-  const sidebarPosts = ARTICLES.filter(a => a.isSidebar && a.id !== article.id).slice(0, 6);
+  const sidebarPosts = allArticles.filter(a => a.id !== article.id).slice(0, 6);
 
   return (
     <article className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 animate-in fade-in duration-300">
@@ -185,8 +197,9 @@ export default function ArticleView({
             {/* Main Stage Image */}
             <div className="w-full relative bg-neutral-50 overflow-hidden shadow-sm group border border-gray-100">
               <img
-                src={article.images[activeImageIndex] || article.images[0]}
+                src={article.images?.[activeImageIndex] || article.images?.[0] || DEFAULT_FALLBACK_IMAGE}
                 alt={`${article.title} gallery display`}
+                onError={handleImageError}
                 referrerPolicy="no-referrer"
                 className="w-full object-cover aspect-[4/5] sm:max-h-[600px] transition-all duration-300"
               />
@@ -205,7 +218,7 @@ export default function ArticleView({
             </div>
 
             {/* Thumbnail Navigation Strip */}
-            {article.images.length > 1 && (
+            {article.images && article.images.length > 1 && (
               <div className="flex flex-wrap gap-2 pt-1.5">
                 {article.images.map((img, idx) => (
                   <button
@@ -218,8 +231,9 @@ export default function ArticleView({
                     }`}
                   >
                     <img 
-                      src={img} 
+                      src={img || DEFAULT_FALLBACK_IMAGE} 
                       alt={`Thumbnail gallery index ${idx + 1}`} 
+                      onError={handleImageError}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover" 
                     />
@@ -244,36 +258,101 @@ export default function ArticleView({
 
           {/* Rich Content Blocks */}
           <div className="prose prose-neutral max-w-3xl font-serif text-base sm:text-lg text-neutral-800 leading-relaxed space-y-6 pt-2">
-            {article.blocks.map((block, idx) => {
-              switch (block.type) {
-                case 'paragraph':
-                  return (
-                    <p key={idx} className="font-light whitespace-pre-line">
-                      {block.text}
-                    </p>
-                  );
-                case 'heading':
-                  return (
-                    <h3 key={idx} className="font-serif text-xl sm:text-2xl font-bold text-black tracking-tight mt-8 mb-3 pt-4 border-t border-gray-100">
-                      {block.text}
-                    </h3>
-                  );
-                case 'quote':
-                  return (
-                    <blockquote key={idx} className="border-l-2 border-black pl-5 py-2 my-6 italic text-lg sm:text-xl text-neutral-950 bg-neutral-50/50">
-                      {block.text}
-                      {block.authorQuote && (
-                        <cite className="block text-xs font-mono tracking-widest uppercase font-semibold text-gray-400 mt-2 not-italic">
-                          — {block.authorQuote}
-                        </cite>
-                      )}
-                    </blockquote>
-                  );
-                case 'product-highlight':
-                  return null;
-                default:
-                  return null;
+            {blocksToRender.map((block, idx) => {
+              const textContent = block.text || (block as any).content || (block as any).body || '';
+              const type = (block.type || 'paragraph').toLowerCase();
+
+              if (type === 'paragraph' || type === 'p' || type === 'text') {
+                return (
+                  <p key={idx} className="font-light whitespace-pre-line leading-relaxed text-neutral-800">
+                    {textContent}
+                  </p>
+                );
               }
+
+              if (type === 'heading' || type === 'h1' || type === 'h2' || type === 'h3' || type === 'title') {
+                return (
+                  <h3 key={idx} className="font-serif text-xl sm:text-2xl font-bold text-black tracking-tight mt-8 mb-3 pt-4 border-t border-gray-100">
+                    {textContent}
+                  </h3>
+                );
+              }
+
+              if (type === 'quote' || type === 'blockquote') {
+                return (
+                  <blockquote key={idx} className="border-l-2 border-black pl-5 py-2 my-6 italic text-lg sm:text-xl text-neutral-950 bg-neutral-50/50">
+                    {textContent}
+                    {block.authorQuote && (
+                      <cite className="block text-xs font-mono tracking-widest uppercase font-semibold text-gray-400 mt-2 not-italic">
+                        — {block.authorQuote}
+                      </cite>
+                    )}
+                  </blockquote>
+                );
+              }
+
+              if (type === 'image' || type === 'photo' || type === 'img') {
+                const imgUrl = block.imageUrl || (block as any).url || (block as any).src || (block as any).image;
+                return (
+                  <figure key={idx} className="my-8 space-y-2">
+                    <img
+                      src={imgUrl || DEFAULT_FALLBACK_IMAGE}
+                      alt={block.caption || 'Article image'}
+                      onError={handleImageError}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-auto object-cover border border-gray-100 shadow-sm"
+                    />
+                    {block.caption && (
+                      <figcaption className="text-xs font-mono text-gray-500 text-center italic">
+                        {block.caption}
+                      </figcaption>
+                    )}
+                  </figure>
+                );
+              }
+
+              if (type === 'product-highlight' || type === 'product' || type === 'shop') {
+                const pImg = block.imageUrl || (block as any).image;
+                return (
+                  <div key={idx} className="my-8 p-5 border border-gray-200 bg-neutral-50 flex flex-col sm:flex-row items-center gap-5 shadow-sm">
+                    {pImg && (
+                      <img
+                        src={pImg}
+                        alt={block.productName || 'Featured Product'}
+                        onError={handleImageError}
+                        referrerPolicy="no-referrer"
+                        className="w-24 h-24 object-cover border border-gray-200 bg-white flex-shrink-0"
+                      />
+                    )}
+                    <div className="space-y-1.5 flex-1 text-left">
+                      {block.productBrand && (
+                        <span className="text-[10px] font-mono tracking-widest uppercase font-semibold text-rose-600 block">
+                          {block.productBrand}
+                        </span>
+                      )}
+                      <h4 className="font-serif text-lg font-bold text-black">
+                        {block.productName || textContent}
+                      </h4>
+                      {block.productDesc && (
+                        <p className="text-xs text-gray-600 font-sans leading-relaxed">
+                          {block.productDesc}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+
+              // Default fallback for any unspecified or raw block type
+              if (textContent) {
+                return (
+                  <p key={idx} className="font-light whitespace-pre-line leading-relaxed text-neutral-800">
+                    {textContent}
+                  </p>
+                );
+              }
+
+              return null;
             })}
           </div>
 
