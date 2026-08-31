@@ -1,20 +1,44 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
+import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-// Initialize the server-side Gemini client with recommended httpOptions and User-Agent.
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    }
+// Lazy initialization of OpenAI client to prevent crashes if key is initially absent
+let openaiClient: OpenAI | null = null;
+function getOpenAIClient(): OpenAI | null {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    return null;
   }
-});
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: apiKey,
+    });
+  }
+  return openaiClient;
+}
+
+// Fallback Gemini client if OpenAI key is not provided
+let geminiClient: GoogleGenAI | null = null;
+function getGeminiClient(): GoogleGenAI | null {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+  if (!geminiClient) {
+    geminiClient = new GoogleGenAI({
+      apiKey: apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+  }
+  return geminiClient;
+}
 
 async function startServer() {
   const app = express();
@@ -22,7 +46,7 @@ async function startServer() {
 
   app.use(express.json());
 
-  // API Route for the Chatbot Aijay
+  // API Route for the Chatbot Aijay using OpenAI
   app.post("/api/chat", async (req, res) => {
     try {
       const { message, history } = req.body;
@@ -46,38 +70,83 @@ Here are the core Turpeen Cosmetics products available in the shop:
 
 Always stay in character as Aijay. If someone asks about unrelated topics, politely pivot back to beauty, skincare, makeup, or Turpeen Cosmetics. Keep your responses relatively concise (1-3 short paragraphs) to make them perfect for a chat interface.`;
 
-      // Build the contents array from user message and history.
-      const formattedContents: any[] = [];
-      
-      if (history && Array.isArray(history)) {
-        history.forEach((msg: any) => {
-          formattedContents.push({
-            role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.text }]
+      // 1. Primary: Use OpenAI API
+      const openai = getOpenAIClient();
+      if (openai) {
+        const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+          { role: "system", content: systemInstruction },
+        ];
+
+        if (history && Array.isArray(history)) {
+          history.forEach((msg: any) => {
+            const role = (msg.role === "user" ? "user" : "assistant") as "user" | "assistant";
+            const content = msg.text || msg.content || "";
+            if (content) {
+              messages.push({ role, content });
+            }
           });
-        });
-      }
-      
-      // Append the latest user message
-      formattedContents.push({
-        role: 'user',
-        parts: [{ text: message }]
-      });
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: formattedContents,
-        config: {
-          systemInstruction: systemInstruction,
-          temperature: 0.7,
         }
-      });
 
-      const replyText = response.text || "I'm sorry, I couldn't generate a response. How else can I assist you with Turpeen Cosmetics today?";
-      res.json({ text: replyText });
+        messages.push({ role: "user", content: message });
+
+        const modelToUse = process.env.OPENAI_MODEL || "gpt-4o-mini";
+        const completion = await openai.chat.completions.create({
+          model: modelToUse,
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 600,
+        });
+
+        const replyText =
+          completion.choices[0]?.message?.content ||
+          "I'm sorry, I couldn't generate a response. How else can I assist you with Turpeen Cosmetics today?";
+
+        return res.json({ text: replyText, provider: "openai" });
+      }
+
+      // 2. Fallback: Use Gemini if OPENAI_API_KEY is not yet populated
+      const gemini = getGeminiClient();
+      if (gemini) {
+        const formattedContents: any[] = [];
+        if (history && Array.isArray(history)) {
+          history.forEach((msg: any) => {
+            formattedContents.push({
+              role: msg.role === "user" ? "user" : "model",
+              parts: [{ text: msg.text || msg.content || "" }],
+            });
+          });
+        }
+        formattedContents.push({
+          role: "user",
+          parts: [{ text: message }],
+        });
+
+        const response = await gemini.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: formattedContents,
+          config: {
+            systemInstruction: systemInstruction,
+            temperature: 0.7,
+          },
+        });
+
+        const replyText =
+          response.text ||
+          "I'm sorry, I couldn't generate a response. How else can I assist you with Turpeen Cosmetics today?";
+        return res.json({ text: replyText, provider: "gemini" });
+      }
+
+      return res.status(500).json({
+        error:
+          "OpenAI API key is not configured. Please add OPENAI_API_KEY in your environment secrets.",
+      });
     } catch (error: any) {
-      console.error("Gemini API Error:", error);
-      res.status(500).json({ error: error.message || "An error occurred while communicating with Gemini." });
+      console.error("Chat API Error:", error);
+      res.status(500).json({
+        error:
+          error.message ||
+          "An error occurred while communicating with the AI service.",
+      });
     }
   });
 

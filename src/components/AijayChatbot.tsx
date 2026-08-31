@@ -63,7 +63,8 @@ export default function AijayChatbot() {
       });
 
       if (!response.ok) {
-        throw new Error('Our boutique consultants are momentarily occupied. Please try again!');
+        const errJson = await response.json().catch(() => null);
+        throw new Error(errJson?.error || 'Our boutique consultants are momentarily occupied. Please try again!');
       }
 
       const data = await response.json();
