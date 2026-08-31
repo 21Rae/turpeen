@@ -22,6 +22,7 @@ import ShareYourRoutine from './components/ShareYourRoutine';
 import ShopView from './components/ShopView';
 import AijayChatbot from './components/AijayChatbot';
 import CreateArticleModal from './components/CreateArticleModal';
+import AboutSection from './components/AboutSection';
 import { getSupabase } from './lib/supabase';
 import { parseImagesFromRow, parseBlocksFromRow } from './utils/imageParser';
 
@@ -36,7 +37,7 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState<'Interviews' | 'Makeup' | 'Skincare' | 'Hair' | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
-  const [currentView, setCurrentView] = useState<'feed' | 'shop'>('feed');
+  const [currentView, setCurrentView] = useState<'feed' | 'shop' | 'about'>('feed');
   
   // Modals & drawers
   const [isShopOpen, setIsShopOpen] = useState(false);
@@ -307,7 +308,16 @@ export default function App() {
           setSelectedArticle(null); // Return to list view on search
           setCurrentView('feed');
         }}
-        onOpenShop={() => setCurrentView('shop')}
+        onOpenShop={() => {
+          setSelectedArticle(null);
+          setCurrentView('shop');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onOpenAbout={() => {
+          setSelectedArticle(null);
+          setCurrentView('about');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
         onOpenShare={() => setIsShareOpen(true)}
         onOpenCreateArticle={() => setIsCreateArticleOpen(true)}
         bookmarksCount={bookmarks.length}
@@ -317,6 +327,7 @@ export default function App() {
           setSelectedArticle(null); // Return to list view on filter change
           setCurrentView('feed');
         }}
+        currentView={currentView}
       />
 
       {/* Main Container */}
@@ -324,6 +335,15 @@ export default function App() {
         
         {currentView === 'shop' ? (
           <ShopView onBack={() => setCurrentView('feed')} />
+        ) : currentView === 'about' ? (
+          <AboutSection 
+            isStandaloneView 
+            onBackToFeed={() => setCurrentView('feed')} 
+            onOpenShop={() => {
+              setCurrentView('shop');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }} 
+          />
         ) : selectedArticle ? (
           /* Detailed Editorial/Article View */
           <ArticleView
@@ -427,6 +447,18 @@ export default function App() {
 
             </div>
 
+            {/* In-feed Boutique About Section */}
+            {!activeCategory && !searchQuery && !showBookmarksOnly && (
+              <div className="pt-8 border-t border-gray-100">
+                <AboutSection 
+                  onOpenShop={() => {
+                    setCurrentView('shop');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }} 
+                />
+              </div>
+            )}
+
           </div>
         )}
 
@@ -436,13 +468,42 @@ export default function App() {
       <footer className="w-full border-t border-gray-100 bg-white py-12 mt-16 text-center text-xs font-mono tracking-wider uppercase text-gray-400">
         <div className="max-w-7xl mx-auto px-4 space-y-4">
           <div className="flex justify-center space-x-6 text-[10px]">
-            <a href="#about" className="hover:text-black">About</a>
-            <a href="#privacy" className="hover:text-black">Privacy Policy</a>
-            <a href="#terms" className="hover:text-black">Terms of Service</a>
-            <a href="#contact" className="hover:text-black">Contact</a>
+            <button
+              id="footer-about-btn"
+              onClick={() => {
+                setSelectedArticle(null);
+                setCurrentView('about');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="hover:text-black cursor-pointer uppercase"
+            >
+              About
+            </button>
+            <button
+              id="footer-contact-btn"
+              onClick={() => {
+                setSelectedArticle(null);
+                setCurrentView('about');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="hover:text-black cursor-pointer uppercase"
+            >
+              Contact & WhatsApp
+            </button>
+            <button
+              id="footer-shop-btn"
+              onClick={() => {
+                setSelectedArticle(null);
+                setCurrentView('shop');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="hover:text-black cursor-pointer uppercase"
+            >
+              Shop
+            </button>
           </div>
           <p className="text-[9px] text-gray-400/80">
-            Turpeencosmetic © {new Date().getFullYear()}. All product rights belong to Turpeen Cosmetics. Replicated for demonstration purposes.
+            Turpeencosmetic © {new Date().getFullYear()}. All product rights belong to Turpeen Cosmetics.
           </p>
         </div>
       </footer>

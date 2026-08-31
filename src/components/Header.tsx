@@ -8,11 +8,13 @@ interface HeaderProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onOpenShop: () => void;
+  onOpenAbout?: () => void;
   onOpenShare: () => void;
   onOpenCreateArticle?: () => void;
   bookmarksCount: number;
   onShowBookmarks: () => void;
   showBookmarksOnly: boolean;
+  currentView?: 'feed' | 'shop' | 'about';
 }
 
 export default function Header({
@@ -21,11 +23,13 @@ export default function Header({
   searchQuery,
   setSearchQuery,
   onOpenShop,
+  onOpenAbout,
   onOpenShare,
   onOpenCreateArticle,
   bookmarksCount,
   onShowBookmarks,
   showBookmarksOnly,
+  currentView = 'feed',
 }: HeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -67,7 +71,7 @@ export default function Header({
                 if (showBookmarksOnly) onShowBookmarks(); // turn off bookmarks if changing category
               }}
               className={`hover:text-black cursor-pointer pb-1 transition-all duration-200 relative ${
-                activeCategory === cat && !showBookmarksOnly
+                activeCategory === cat && !showBookmarksOnly && currentView === 'feed'
                   ? 'text-black font-semibold border-b border-black'
                   : 'text-gray-500'
               }`}
@@ -75,6 +79,21 @@ export default function Header({
               {cat}
             </button>
           ))}
+
+          {/* About Navigation Link */}
+          {onOpenAbout && (
+            <button
+              id="nav-about-btn"
+              onClick={onOpenAbout}
+              className={`hover:text-black cursor-pointer pb-1 transition-all duration-200 relative ${
+                currentView === 'about'
+                  ? 'text-black font-semibold border-b border-black'
+                  : 'text-gray-500'
+              }`}
+            >
+              About
+            </button>
+          )}
 
           {/* Search Trigger */}
           <div className="flex items-center space-x-2 border-l border-gray-200 pl-4 h-4">
@@ -190,12 +209,27 @@ export default function Header({
                   setIsMobileMenuOpen(false);
                 }}
                 className={`text-left py-1 ${
-                  activeCategory === cat && !showBookmarksOnly ? 'text-black font-semibold' : 'text-gray-500'
+                  activeCategory === cat && !showBookmarksOnly && currentView === 'feed' ? 'text-black font-semibold' : 'text-gray-500'
                 }`}
               >
                 {cat}
               </button>
             ))}
+
+            {onOpenAbout && (
+              <button
+                id="mobile-nav-about-btn"
+                onClick={() => {
+                  onOpenAbout();
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`text-left py-1 ${
+                  currentView === 'about' ? 'text-black font-semibold' : 'text-gray-500'
+                }`}
+              >
+                About
+              </button>
+            )}
           </div>
         </div>
       )}
