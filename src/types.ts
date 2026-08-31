@@ -51,3 +51,23 @@ export interface UserRoutine {
   favoriteProduct: string;
   createdAt: string;
 }
+
+export interface ShopProduct {
+  id: string;
+  name: string;
+  subtitle: string;
+  brand?: string;
+  price: string;
+  priceNumeric?: number;
+  originalPrice?: string;
+  badge?: string;
+  badgeType?: 'best' | 'mix' | 'new' | 'rated';
+  image: string;
+  images?: string[];
+  category: string;
+  origin?: string;
+  rating?: number;
+  inStock?: boolean;
+  swatches?: { name: string; color: string }[];
+  description?: string;
+}

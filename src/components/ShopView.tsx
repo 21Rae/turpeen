@@ -1,23 +1,14 @@
-import React, { useState } from 'react';
-import { Phone, X, Check, ArrowRight, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Phone, X, Check, ArrowRight, ArrowLeft, ExternalLink, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TurpeenLogo } from './TurpeenLogo';
+import { WhatsAppIcon, TURPEEN_SOCIAL_LINKS } from './SocialIcons';
+import { ShopProduct } from '../types';
+import { getSupabase } from '../lib/supabase';
+import { parseProductFromRow } from '../utils/imageParser';
 
 interface ShopViewProps {
   onBack: () => void;
-}
-
-interface ShopProduct {
-  id: string;
-  name: string;
-  subtitle: string;
-  price: string;
-  originalPrice?: string;
-  badge?: string;
-  badgeType?: 'best' | 'mix' | 'new' | 'rated';
-  image: string;
-  category: string;
-  swatches?: { name: string; color: string }[];
 }
 
 const SHOP_PRODUCTS: ShopProduct[] = [
@@ -145,8 +136,10 @@ const SHOP_PRODUCTS: ShopProduct[] = [
 ];
 
 export default function ShopView({ onBack }: ShopViewProps) {
+  const [products, setProducts] = useState<ShopProduct[]>(SHOP_PRODUCTS);
   const [selectedCategory, setSelectedCategory] = useState<string>('SHOP ALL');
   const [selectedProductForOrder, setSelectedProductForOrder] = useState<ShopProduct | null>(null);
+  const [isLiveSyncing, setIsLiveSyncing] = useState<boolean>(true);
   
   // Callback Request state
   const [callbackPhone, setCallbackPhone] = useState('');
@@ -160,6 +153,76 @@ export default function ShopView({ onBack }: ShopViewProps) {
     'sb-5': 'Puff',
     'sb-6': 'Sail',
   });
+
+  // Real-Time Database Sync for Products
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase) {
+      setIsLiveSyncing(false);
+      return;
+    }
+
+    const fetchProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('id', { ascending: true });
+
+        if (data && !error && data.length > 0) {
+          const dbProducts = data.map(parseProductFromRow);
+          setProducts(dbProducts);
+        }
+      } catch (err) {
+        console.warn('Notice: Using catalogue cache while products table initializes', err);
+      }
+    };
+
+    fetchProducts();
+
+    // Subscribe to all changes (INSERT, UPDATE, DELETE) in the products table
+    const productsChannel = supabase
+      .channel('public:products:realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'products' },
+        (payload) => {
+          const newProduct = parseProductFromRow(payload.new);
+          setProducts((prev) => {
+            const exists = prev.some((p) => p.id === newProduct.id);
+            return exists ? prev.map((p) => (p.id === newProduct.id ? newProduct : p)) : [...prev, newProduct];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'products' },
+        (payload) => {
+          const updatedProduct = parseProductFromRow(payload.new);
+          setProducts((prev) =>
+            prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+          );
+          // If the customer has this product open in the order modal, update it immediately in real-time
+          setSelectedProductForOrder((curr) => (curr && curr.id === updatedProduct.id ? updatedProduct : curr));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'products' },
+        (payload) => {
+          const deletedId = String(payload.old?.id || '');
+          if (deletedId) {
+            setProducts((prev) => prev.filter((p) => p.id !== deletedId));
+            setSelectedProductForOrder((curr) => (curr && curr.id === deletedId ? null : curr));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(productsChannel);
+    };
+  }, []);
 
   const categories = [
     'SKINCARE',
@@ -180,8 +243,8 @@ export default function ShopView({ onBack }: ShopViewProps) {
   };
 
   const filteredProducts = selectedCategory === 'SHOP ALL'
-    ? SHOP_PRODUCTS
-    : SHOP_PRODUCTS.filter(p => p.category === selectedCategory.toLowerCase().replace(' ', ''));
+    ? products
+    : products.filter(p => p.category === selectedCategory.toLowerCase().replace(' ', ''));
 
   const handleCallToOrder = (product: ShopProduct) => {
     setSelectedProductForOrder(product);
@@ -190,9 +253,29 @@ export default function ShopView({ onBack }: ShopViewProps) {
     setCallbackName('');
   };
 
-  const submitCallback = (e: React.FormEvent) => {
+  const submitCallback = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!callbackPhone.trim()) return;
+
+    const supabase = getSupabase();
+    if (supabase && selectedProductForOrder) {
+      try {
+        await supabase.from('shop_callback_requests').insert([
+          {
+            product_id: selectedProductForOrder.id,
+            product_name: selectedProductForOrder.name,
+            product_price: selectedProductForOrder.price,
+            swatch: selectedSwatches[selectedProductForOrder.id] || null,
+            customer_name: callbackName.trim() || 'Valued Customer',
+            customer_phone: callbackPhone.trim(),
+            status: 'pending',
+          }
+        ]);
+      } catch (err) {
+        console.warn('Callback logged locally:', err);
+      }
+    }
+
     setCallbackSubmitted(true);
   };
 
@@ -243,12 +326,20 @@ export default function ShopView({ onBack }: ShopViewProps) {
 
       {/* 2. Sub-Header stats bar */}
       <div className="border-b border-gray-100 py-3 text-xs font-mono text-gray-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-baseline select-none">
-          <div>
-            View <span className="text-black font-bold">(Product)</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center select-none flex-wrap gap-2">
+          <div className="flex items-center space-x-3">
+            <span>
+              View <span className="text-black font-bold">({filteredProducts.length} Items)</span>
+            </span>
+            {isLiveSyncing && (
+              <span className="inline-flex items-center space-x-1 text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60 font-mono font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Live DB Connected</span>
+              </span>
+            )}
           </div>
-          <div className="flex space-x-6">
-            <span>Filter (0)</span>
+          <div className="flex space-x-6 text-[11px]">
+            <span>Category ({selectedCategory})</span>
             <span>Sort (Featured)</span>
           </div>
         </div>
@@ -464,19 +555,39 @@ export default function ShopView({ onBack }: ShopViewProps) {
                 </div>
               </div>
 
-              {/* Central Direct Calling Card */}
-              <div className="bg-rose-50 border border-rose-100 p-5 rounded space-y-3 text-center">
-                <span className="text-[10px] font-mono tracking-widest text-rose-500 uppercase font-bold block">
-                  📞 DIRECT BOUTIQUE HOTLINE
+              {/* Central Direct Ordering & WhatsApp Card */}
+              <div className="bg-rose-50/70 border border-rose-100 p-5 rounded space-y-3 text-center">
+                <span className="text-[10px] font-mono tracking-widest text-rose-600 uppercase font-bold block">
+                  📞 DIRECT BOUTIQUE ORDERS & WHATSAPP
                 </span>
                 <p className="font-serif text-2xl font-bold text-black tracking-tight select-all">
-                  +234 812 345 6789
+                  {TURPEEN_SOCIAL_LINKS.phone}
                 </p>
                 <p className="text-[10px] text-gray-500 font-mono">
                   Refer to Item Code: <strong className="text-black font-semibold">TC-ORDER-{selectedProductForOrder.id.toUpperCase()}</strong>
                 </p>
-                <p className="text-[11px] font-light text-gray-600 leading-relaxed">
-                  Call our premium Turpeen Cosmetics consultants to finalize your size/shade preferences and dispatch immediate nationwide delivery.
+
+                {/* Direct WhatsApp Action Button */}
+                <div className="pt-1">
+                  <a
+                    id="shop-modal-whatsapp-btn"
+                    href={`https://wa.me/2347062296118?text=${encodeURIComponent(
+                      `Hello Turpeen Cosmetics! I would like to order "${selectedProductForOrder.name}" (${selectedProductForOrder.price})${
+                        selectedSwatches[selectedProductForOrder.id] ? ` in shade/color "${selectedSwatches[selectedProductForOrder.id]}"` : ''
+                      }. Please confirm availability and delivery to my location.`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[10px] tracking-widest uppercase py-2.5 px-4 rounded-sm transition-all duration-150 w-full shadow-xs active:scale-98"
+                  >
+                    <WhatsAppIcon className="w-3.5 h-3.5" />
+                    <span>Order Directly on WhatsApp</span>
+                    <ExternalLink className="w-3 h-3 opacity-80" />
+                  </a>
+                </div>
+
+                <p className="text-[11px] font-light text-gray-600 leading-relaxed pt-1">
+                  Chat with our Lagos beauty consultants to confirm shade preferences and nationwide dispatch.
                 </p>
               </div>
 

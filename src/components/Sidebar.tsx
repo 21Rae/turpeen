@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Mail, Facebook, Instagram, Heart, MapPin, Sparkles, BookOpen } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { Article } from '../types';
 import { TOP_25_BRANDS } from '../data';
 import { handleImageError, DEFAULT_FALLBACK_IMAGE } from '../utils/imageParser';
+import { InstagramIcon, TikTokIcon, WhatsAppIcon, TURPEEN_SOCIAL_LINKS } from './SocialIcons';
 
 interface SidebarProps {
   sidebarArticles: Article[];
@@ -34,36 +35,52 @@ export default function Sidebar({
         <p className="text-[11px] text-gray-500 font-light max-w-[200px] mx-auto mb-4 leading-normal">
           Get daily beauty interviews and product reports.
         </p>
-        <div className="flex justify-center space-x-3">
-          {/* Social Icons */}
-          <button
-            id="social-mail"
-            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-all duration-200 cursor-pointer"
-            title="Newsletter"
+        <div className="flex justify-center items-center space-x-3">
+          {/* Instagram */}
+          <a
+            id="sidebar-social-instagram"
+            href={TURPEEN_SOCIAL_LINKS.instagram}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:text-rose-600 hover:border-rose-500 transition-all duration-200 cursor-pointer shadow-2xs"
+            title="Instagram (@turpeen_cosmetics)"
+          >
+            <InstagramIcon className="w-4 h-4" />
+          </a>
+
+          {/* TikTok */}
+          <a
+            id="sidebar-social-tiktok"
+            href={TURPEEN_SOCIAL_LINKS.tiktok}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:text-black hover:border-black transition-all duration-200 cursor-pointer shadow-2xs"
+            title="TikTok (@turpeen_cosmetics)"
+          >
+            <TikTokIcon className="w-4 h-4" />
+          </a>
+
+          {/* WhatsApp */}
+          <a
+            id="sidebar-social-whatsapp"
+            href={TURPEEN_SOCIAL_LINKS.whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:text-emerald-600 hover:border-emerald-500 transition-all duration-200 cursor-pointer shadow-2xs"
+            title="WhatsApp Orders"
+          >
+            <WhatsAppIcon className="w-4 h-4" />
+          </a>
+
+          {/* Newsletter / Mail */}
+          <a
+            id="sidebar-social-mail"
+            href={`tel:${TURPEEN_SOCIAL_LINKS.phone}`}
+            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:text-black hover:border-black transition-all duration-200 cursor-pointer shadow-2xs"
+            title="Call 07062296118"
           >
             <Mail className="w-4 h-4" />
-          </button>
-          <button
-            id="social-instagram"
-            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-all duration-200 cursor-pointer"
-            title="Instagram"
-          >
-            <Instagram className="w-4 h-4" />
-          </button>
-          <button
-            id="social-facebook"
-            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-all duration-200 cursor-pointer"
-            title="Facebook"
-          >
-            <Facebook className="w-4 h-4" />
-          </button>
-          <button
-            id="social-pinterest"
-            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-all duration-200 cursor-pointer"
-            title="Pinterest"
-          >
-            <span className="font-serif font-bold text-xs">P</span>
-          </button>
+          </a>
         </div>
       </div>
 

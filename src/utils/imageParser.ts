@@ -1,5 +1,5 @@
 import type { SyntheticEvent } from 'react';
-import type { ArticleContentBlock } from '../types';
+import type { ArticleContentBlock, Article, ShopProduct } from '../types';
 
 export const DEFAULT_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1000&q=80';
 
@@ -192,4 +192,91 @@ export function handleImageError(e: SyntheticEvent<HTMLImageElement, Event>) {
   if (target.src !== DEFAULT_FALLBACK_IMAGE) {
     target.src = DEFAULT_FALLBACK_IMAGE;
   }
+}
+
+/**
+ * Parses any Supabase database row into a standardized Article model.
+ */
+export function parseArticleFromRow(row: any): Article {
+  const dateStr = row.date || (row.created_at ? new Date(row.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Today');
+  
+  return {
+    id: String(row.id || `art-${Date.now()}`),
+    title: row.title || 'Untitled Post',
+    subtitle: row.subtitle || undefined,
+    slug: row.slug || `post-${Date.now()}`,
+    category: row.category || 'Interviews',
+    badge: row.badge || 'THE TOP SHELF',
+    author: row.author || 'Turpeen Editorial',
+    authorTitle: row.author_title || row.authorTitle || undefined,
+    date: dateStr,
+    readTime: row.read_time || row.readTime || '4 min read',
+    excerpt: row.excerpt || row.title || '',
+    images: parseImagesFromRow(row),
+    blocks: parseBlocksFromRow(row),
+    isHero: row.is_hero ?? row.isHero ?? false,
+    isSecondaryHero: row.is_secondary_hero ?? row.isSecondaryHero ?? false,
+    isLatest: row.is_latest ?? row.isLatest ?? true,
+    isSidebar: row.is_sidebar ?? row.isSidebar ?? false,
+    sidebarBadge: row.sidebar_badge || row.sidebarBadge || undefined,
+  };
+}
+
+/**
+ * Parses any Supabase database row into a standardized ShopProduct model.
+ */
+export function parseProductFromRow(row: any): ShopProduct {
+  let swatches: { name: string; color: string }[] = [];
+  if (Array.isArray(row.swatches)) {
+    swatches = row.swatches;
+  } else if (typeof row.swatches === 'string') {
+    try {
+      const parsed = JSON.parse(row.swatches);
+      if (Array.isArray(parsed)) swatches = parsed;
+    } catch {
+      swatches = [];
+    }
+  }
+
+  let formattedPrice = row.price ? String(row.price).trim() : '';
+  if (!formattedPrice && row.price_numeric) {
+    formattedPrice = `₦${Number(row.price_numeric).toLocaleString()}`;
+  } else if (formattedPrice && !formattedPrice.includes('₦') && !formattedPrice.includes('$')) {
+    if (!isNaN(Number(formattedPrice.replace(/,/g, '')))) {
+      formattedPrice = `₦${Number(formattedPrice.replace(/,/g, '')).toLocaleString()}`;
+    } else {
+      formattedPrice = `₦${formattedPrice}`;
+    }
+  }
+
+  let originalPrice = row.original_price || row.originalPrice;
+  if (originalPrice) {
+    originalPrice = String(originalPrice).trim();
+    if (!originalPrice.includes('₦') && !originalPrice.includes('$') && !isNaN(Number(originalPrice.replace(/,/g, '')))) {
+      originalPrice = `₦${Number(originalPrice.replace(/,/g, '')).toLocaleString()}`;
+    }
+  }
+
+  const imagesList = parseImagesFromRow(row);
+  const mainImage = row.image || imagesList[0] || DEFAULT_FALLBACK_IMAGE;
+
+  return {
+    id: String(row.id || `prod-${Date.now()}`),
+    name: row.name || 'Turpeen Cosmetics Item',
+    subtitle: row.subtitle || row.description || '',
+    brand: row.brand || 'Turpeen Cosmetics',
+    price: formattedPrice || '₦0',
+    priceNumeric: row.price_numeric ? Number(row.price_numeric) : undefined,
+    originalPrice: originalPrice || undefined,
+    badge: row.badge || undefined,
+    badgeType: (row.badge_type || row.badgeType || (row.badge ? 'best' : undefined)) as any,
+    image: mainImage,
+    images: imagesList,
+    category: (row.category || 'makeup').toLowerCase().trim(),
+    origin: row.origin || '🇰🇷 Korea',
+    rating: row.rating ? Number(row.rating) : 4.8,
+    inStock: row.in_stock !== false && row.inStock !== false,
+    swatches: swatches.length > 0 ? swatches : undefined,
+    description: row.description || undefined,
+  };
 }

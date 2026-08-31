@@ -4,7 +4,6 @@ import {
   Package, 
   Phone, 
   Sparkles, 
-  MessageCircle, 
   Check, 
   Copy, 
   ExternalLink, 
@@ -16,6 +15,7 @@ import {
   Heart
 } from 'lucide-react';
 import { TurpeenIcon } from './TurpeenLogo';
+import { InstagramIcon, TikTokIcon, WhatsAppIcon, TURPEEN_SOCIAL_LINKS } from './SocialIcons';
 
 interface AboutSectionProps {
   onOpenShop?: () => void;
@@ -26,9 +26,10 @@ interface AboutSectionProps {
 export default function AboutSection({ onOpenShop, isStandaloneView = false, onBackToFeed }: AboutSectionProps) {
   const [copiedPhone, setCopiedPhone] = useState(false);
 
-  const phoneNumber = '07062296118';
-  const whatsappUrl = 'https://wa.me/message/4J2WHQITQEYYN1';
-  const whatsappDirectNumUrl = 'https://wa.me/2347062296118?text=Hello%20Turpeen%20Cosmetics!%20I%20would%20like%20to%20inquire%20about%20your%20skincare%20and%20bodycare%20products.';
+  const phoneNumber = TURPEEN_SOCIAL_LINKS.phone;
+  const whatsappUrl = TURPEEN_SOCIAL_LINKS.whatsapp;
+  const instagramUrl = TURPEEN_SOCIAL_LINKS.instagram;
+  const tiktokUrl = TURPEEN_SOCIAL_LINKS.tiktok;
 
   const handleCopyPhone = () => {
     navigator.clipboard.writeText(phoneNumber);
@@ -137,11 +138,11 @@ export default function AboutSection({ onOpenShop, isStandaloneView = false, onB
 
           {/* Highlight 4: Direct Consultation */}
           <div className="bg-neutral-50 p-5 border border-gray-200/80 rounded-sm hover:border-gray-300 transition-colors">
-            <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-3">
-              <MessageCircle className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
+              <WhatsAppIcon className="w-5 h-5" />
             </div>
             <div className="flex items-center space-x-1 mb-1.5 text-xs font-mono font-bold tracking-wider uppercase text-gray-900">
-              <Phone className="w-3.5 h-3.5 text-green-600" />
+              <Phone className="w-3.5 h-3.5 text-emerald-600" />
               <span>07062296118</span>
             </div>
             <h3 className="font-serif text-base font-bold text-neutral-900 mb-1">
@@ -152,6 +153,59 @@ export default function AboutSection({ onOpenShop, isStandaloneView = false, onB
             </p>
           </div>
 
+        </div>
+
+        {/* Official Social Media Channels Strip */}
+        <div className="border border-gray-100 rounded-sm p-5 bg-gradient-to-r from-neutral-50 via-white to-neutral-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 font-semibold block mb-0.5">
+              Official Social Channels
+            </span>
+            <p className="text-xs text-neutral-800 font-serif font-bold">
+              Follow @turpeen_cosmetics for restock drops, routine guides & daily swatches
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Instagram */}
+            <a
+              id="about-social-instagram-btn"
+              href={instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white text-xs font-mono tracking-wider uppercase px-3.5 py-2 rounded-sm hover:opacity-90 transition-opacity shadow-2xs"
+            >
+              <InstagramIcon className="w-3.5 h-3.5" />
+              <span>Instagram</span>
+              <ExternalLink className="w-3 h-3 opacity-75" />
+            </a>
+
+            {/* TikTok */}
+            <a
+              id="about-social-tiktok-btn"
+              href={tiktokUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center space-x-2 bg-black text-white text-xs font-mono tracking-wider uppercase px-3.5 py-2 rounded-sm hover:bg-neutral-800 transition-colors shadow-2xs"
+            >
+              <TikTokIcon className="w-3.5 h-3.5" />
+              <span>TikTok</span>
+              <ExternalLink className="w-3 h-3 opacity-75" />
+            </a>
+
+            {/* WhatsApp */}
+            <a
+              id="about-social-whatsapp-btn"
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center space-x-2 bg-emerald-600 text-white text-xs font-mono tracking-wider uppercase px-3.5 py-2 rounded-sm hover:bg-emerald-500 transition-colors shadow-2xs"
+            >
+              <WhatsAppIcon className="w-3.5 h-3.5" />
+              <span>WhatsApp</span>
+              <ExternalLink className="w-3 h-3 opacity-75" />
+            </a>
+          </div>
         </div>
 
         {/* Contact & Instant Action Callout */}
@@ -165,7 +219,7 @@ export default function AboutSection({ onOpenShop, isStandaloneView = false, onB
               Ready to elevate your beauty regimen?
             </h3>
             <p className="text-xs sm:text-sm text-neutral-400 font-light leading-relaxed">
-              Send us a DM or chat with our beauty advisors on WhatsApp at <strong className="text-white font-mono">{phoneNumber}</strong> for rapid order confirmation and product availability.
+              Send us a DM on Instagram <strong className="text-white">@turpeen_cosmetics</strong>, TikTok, or chat directly on WhatsApp at <strong className="text-white font-mono">{phoneNumber}</strong> for rapid order confirmation and product availability.
             </p>
           </div>
 
@@ -179,7 +233,7 @@ export default function AboutSection({ onOpenShop, isStandaloneView = false, onB
               rel="noopener noreferrer"
               className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono tracking-widest uppercase px-5 py-3 rounded-sm flex items-center space-x-2 transition-all duration-200 shadow-sm active:scale-95"
             >
-              <MessageCircle className="w-4 h-4 fill-current" />
+              <WhatsAppIcon className="w-4 h-4" />
               <span>WhatsApp Us</span>
               <ExternalLink className="w-3.5 h-3.5 opacity-80" />
             </a>
@@ -254,7 +308,7 @@ export default function AboutSection({ onOpenShop, isStandaloneView = false, onB
                 <span className="font-mono uppercase font-bold text-neutral-900 block text-[11px]">💬 WhatsApp & Orders</span>
                 <p className="font-mono font-bold text-neutral-900">07062296118</p>
                 <a 
-                  href={whatsappDirectNumUrl}
+                  href={whatsappUrl}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-emerald-700 hover:underline inline-flex items-center space-x-1"

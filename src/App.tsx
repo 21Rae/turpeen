@@ -23,8 +23,9 @@ import ShopView from './components/ShopView';
 import AijayChatbot from './components/AijayChatbot';
 import CreateArticleModal from './components/CreateArticleModal';
 import AboutSection from './components/AboutSection';
+import { InstagramIcon, TikTokIcon, WhatsAppIcon, TURPEEN_SOCIAL_LINKS } from './components/SocialIcons';
 import { getSupabase } from './lib/supabase';
-import { parseImagesFromRow, parseBlocksFromRow } from './utils/imageParser';
+import { parseImagesFromRow, parseBlocksFromRow, parseArticleFromRow } from './utils/imageParser';
 
 interface CartItem {
   product: Product;
@@ -49,84 +50,111 @@ export default function App() {
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  // 1. Fetch articles strictly from Supabase & subscribe to Real-Time INSERT/UPDATE events
+  // 1. Fetch articles strictly from Supabase & subscribe to Real-Time INSERT, UPDATE, and DELETE events
   useEffect(() => {
     const supabase = getSupabase();
     if (!supabase) return;
 
     // Fetch initial Supabase articles
     const fetchArticles = async () => {
-      const { data, error } = await supabase
-        .from('articles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('articles')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (data && !error) {
-        const fetchedArticles: Article[] = data.map((row: any) => ({
-          id: row.id || `art-${Date.now()}`,
-          title: row.title || 'Untitled Post',
-          subtitle: row.subtitle,
-          slug: row.slug || `post-${Date.now()}`,
-          category: row.category || 'Interviews',
-          badge: row.badge || 'THE TOP SHELF',
-          author: row.author || 'Turpeen Editorial',
-          authorTitle: row.author_title,
-          date: row.date || 'Today',
-          readTime: row.read_time || '4 min read',
-          excerpt: row.excerpt || row.title || '',
-          images: parseImagesFromRow(row),
-          blocks: parseBlocksFromRow(row),
-          isHero: row.is_hero ?? false,
-          isSecondaryHero: row.is_secondary_hero ?? false,
-          isLatest: row.is_latest ?? true,
-          isSidebar: row.is_sidebar ?? false,
-          sidebarBadge: row.sidebar_badge,
-        }));
-
-        setArticles(fetchedArticles);
-      } else {
-        setArticles([]);
+        if (data && !error) {
+          const fetchedArticles: Article[] = data.map((row: any) => parseArticleFromRow(row));
+          setArticles(fetchedArticles);
+        } else {
+          setArticles([]);
+        }
+      } catch (e) {
+        console.error('Error fetching articles from Supabase:', e);
       }
     };
 
     fetchArticles();
 
-    // Real-Time subscription for new blog posts inserted into Supabase
-    const channel = supabase
-      .channel('public:articles')
+    // Real-Time subscription for all changes (INSERT, UPDATE, DELETE) in the articles table
+    const articlesChannel = supabase
+      .channel('public:articles:realtime')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'articles' },
         (payload) => {
-          const row = payload.new;
-          const newArticle: Article = {
-            id: row.id || `art-${Date.now()}`,
-            title: row.title || 'Untitled Post',
-            subtitle: row.subtitle,
-            slug: row.slug || `post-${Date.now()}`,
-            category: row.category || 'Interviews',
-            badge: row.badge || 'THE TOP SHELF',
-            author: row.author || 'Turpeen Editorial',
-            authorTitle: row.author_title,
-            date: row.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-            readTime: row.read_time || '4 min read',
-            excerpt: row.excerpt || row.title || '',
-            images: parseImagesFromRow(row),
-            blocks: parseBlocksFromRow(row),
-            isHero: row.is_hero ?? false,
-            isSecondaryHero: row.is_secondary_hero ?? false,
-            isLatest: row.is_latest ?? true,
-            isSidebar: row.is_sidebar ?? false,
-            sidebarBadge: row.sidebar_badge,
-          };
-
+          const newArticle = parseArticleFromRow(payload.new);
           setArticles((prev) => [newArticle, ...prev.filter((a) => a.id !== newArticle.id)]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'articles' },
+        (payload) => {
+          const updatedArticle = parseArticleFromRow(payload.new);
+          // Update in the articles feed
+          setArticles((prev) =>
+            prev.map((a) => (a.id === updatedArticle.id ? updatedArticle : a))
+          );
+          // If the user is currently viewing this article, live-update the open detail view
+          setSelectedArticle((curr) => (curr && curr.id === updatedArticle.id ? updatedArticle : curr));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'articles' },
+        (payload) => {
+          const deletedId = String(payload.old?.id || payload.old?.slug || '');
+          if (deletedId) {
+            setArticles((prev) => prev.filter((a) => a.id !== deletedId && a.slug !== deletedId));
+            setSelectedArticle((curr) => (curr && (curr.id === deletedId || curr.slug === deletedId) ? null : curr));
+          }
+        }
+      )
+      .subscribe();
+
+    // Fetch & Subscribe to User Routines if available in Supabase
+    const fetchRoutines = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_routines')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (data && !error && data.length > 0) {
+          const routines: UserRoutine[] = data.map((r: any) => ({
+            id: String(r.id),
+            name: r.name || 'Anonymous',
+            occupation: r.occupation || '',
+            location: r.location || '',
+            title: r.title || 'My Beauty Routine',
+            routine: r.routine || r.content || '',
+            favoriteProduct: r.favorite_product || r.favoriteProduct || '',
+            createdAt: r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Recently',
+          }));
+          setUserRoutines(routines);
+        }
+      } catch (e) {
+        // Table might not exist yet, fallback to localStorage
+      }
+    };
+
+    fetchRoutines();
+
+    const routinesChannel = supabase
+      .channel('public:user_routines:realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_routines' },
+        () => {
+          fetchRoutines();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(articlesChannel);
+      supabase.removeChannel(routinesChannel);
     };
   }, []);
 
@@ -466,8 +494,10 @@ export default function App() {
 
       {/* Styled Footer */}
       <footer className="w-full border-t border-gray-100 bg-white py-12 mt-16 text-center text-xs font-mono tracking-wider uppercase text-gray-400">
-        <div className="max-w-7xl mx-auto px-4 space-y-4">
-          <div className="flex justify-center space-x-6 text-[10px]">
+        <div className="max-w-7xl mx-auto px-4 space-y-6">
+          
+          {/* Navigation Links */}
+          <div className="flex justify-center flex-wrap gap-x-6 gap-y-2 text-[10px]">
             <button
               id="footer-about-btn"
               onClick={() => {
@@ -477,7 +507,7 @@ export default function App() {
               }}
               className="hover:text-black cursor-pointer uppercase"
             >
-              About
+              About & Lagos Boutique
             </button>
             <button
               id="footer-contact-btn"
@@ -499,11 +529,55 @@ export default function App() {
               }}
               className="hover:text-black cursor-pointer uppercase"
             >
-              Shop
+              Shop All Products
             </button>
           </div>
+
+          {/* Social Icons Strip */}
+          <div className="flex justify-center items-center space-x-4">
+            <a
+              id="footer-social-instagram"
+              href={TURPEEN_SOCIAL_LINKS.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1 text-gray-400 hover:text-rose-600 transition-colors"
+              title="Instagram (@turpeen_cosmetics)"
+            >
+              <InstagramIcon className="w-4 h-4" />
+              <span className="text-[10px]">Instagram</span>
+            </a>
+
+            <span className="text-gray-200">•</span>
+
+            <a
+              id="footer-social-tiktok"
+              href={TURPEEN_SOCIAL_LINKS.tiktok}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1 text-gray-400 hover:text-black transition-colors"
+              title="TikTok (@turpeen_cosmetics)"
+            >
+              <TikTokIcon className="w-4 h-4" />
+              <span className="text-[10px]">TikTok</span>
+            </a>
+
+            <span className="text-gray-200">•</span>
+
+            <a
+              id="footer-social-whatsapp"
+              href={TURPEEN_SOCIAL_LINKS.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1 text-gray-400 hover:text-emerald-600 transition-colors"
+              title="WhatsApp Chat & Orders"
+            >
+              <WhatsAppIcon className="w-4 h-4" />
+              <span className="text-[10px]">WhatsApp</span>
+            </a>
+          </div>
+
           <p className="text-[9px] text-gray-400/80">
-            Turpeencosmetic © {new Date().getFullYear()}. All product rights belong to Turpeen Cosmetics.
+            Turpeencosmetic © {new Date().getFullYear()}. Skincare & Bodycare Products in Lagos, Nigeria.
           </p>
         </div>
       </footer>

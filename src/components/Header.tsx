@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search, X, Heart, Menu, Edit3 } from 'lucide-react';
 import { TurpeenIcon, TurpeenWordmark } from './TurpeenLogo';
+import { InstagramIcon, TikTokIcon, WhatsAppIcon, TURPEEN_SOCIAL_LINKS } from './SocialIcons';
 
 interface HeaderProps {
   activeCategory: string | null;
@@ -43,9 +44,60 @@ export default function Header({
 
   return (
     <header className="w-full bg-white border-b border-gray-100 sticky top-0 z-40 transition-all duration-300">
-      {/* Topmost Brand Indicator Bar */}
-      <div className="w-full border-b border-gray-100 py-1.5 flex justify-center items-center bg-gray-50 text-[10px] tracking-widest font-mono text-gray-500 uppercase">
-        <span className="font-bold text-black text-sm select-none hover:scale-110 transition-transform duration-200 cursor-pointer">T</span>
+      {/* Topmost Brand Indicator & Social Bar */}
+      <div className="w-full border-b border-gray-100 py-1.5 px-4 bg-gray-50 text-[10px] tracking-widest font-mono text-gray-500 uppercase flex justify-between items-center">
+        <div className="hidden sm:flex items-center space-x-2 text-[9px] text-gray-400">
+          <span>Lagos Boutique</span>
+          <span>•</span>
+          <span>🇰🇷 🇺🇸 🇬🇧 Curated</span>
+        </div>
+
+        <div className="mx-auto sm:mx-0">
+          <span 
+            onClick={() => {
+              setActiveCategory(null);
+              if (showBookmarksOnly) onShowBookmarks();
+              setSearchQuery('');
+            }}
+            className="font-bold text-black text-sm select-none hover:scale-110 transition-transform duration-200 cursor-pointer"
+          >
+            T
+          </span>
+        </div>
+
+        {/* Header Social Links */}
+        <div className="flex items-center space-x-3 text-gray-500">
+          <a
+            id="header-social-instagram"
+            href={TURPEEN_SOCIAL_LINKS.instagram}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-rose-600 transition-colors"
+            title="Instagram @turpeen_cosmetics"
+          >
+            <InstagramIcon className="w-3.5 h-3.5" />
+          </a>
+          <a
+            id="header-social-tiktok"
+            href={TURPEEN_SOCIAL_LINKS.tiktok}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-black transition-colors"
+            title="TikTok @turpeen_cosmetics"
+          >
+            <TikTokIcon className="w-3.5 h-3.5" />
+          </a>
+          <a
+            id="header-social-whatsapp"
+            href={TURPEEN_SOCIAL_LINKS.whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-emerald-600 transition-colors"
+            title="WhatsApp Orders"
+          >
+            <WhatsAppIcon className="w-3.5 h-3.5" />
+          </a>
+        </div>
       </div>
 
       {/* Main Navigation Row */}
@@ -230,6 +282,40 @@ export default function Header({
                 About
               </button>
             )}
+
+            {/* Mobile Social Links */}
+            <div className="pt-3 border-t border-gray-100 flex items-center space-x-4">
+              <a
+                id="mobile-nav-instagram"
+                href={TURPEEN_SOCIAL_LINKS.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-1.5 text-gray-500 hover:text-rose-600"
+              >
+                <InstagramIcon className="w-3.5 h-3.5" />
+                <span className="text-[10px]">Instagram</span>
+              </a>
+              <a
+                id="mobile-nav-tiktok"
+                href={TURPEEN_SOCIAL_LINKS.tiktok}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-1.5 text-gray-500 hover:text-black"
+              >
+                <TikTokIcon className="w-3.5 h-3.5" />
+                <span className="text-[10px]">TikTok</span>
+              </a>
+              <a
+                id="mobile-nav-whatsapp"
+                href={TURPEEN_SOCIAL_LINKS.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-1.5 text-gray-500 hover:text-emerald-600"
+              >
+                <WhatsAppIcon className="w-3.5 h-3.5" />
+                <span className="text-[10px]">WhatsApp</span>
+              </a>
+            </div>
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Send, CheckCircle2 } from 'lucide-react';
 import { UserRoutine } from '../types';
+import { getSupabase } from '../lib/supabase';
 
 interface ShareYourRoutineProps {
   isOpen: boolean;
@@ -23,7 +24,7 @@ export default function ShareYourRoutine({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !occupation || !location || !title || !routineText || !favoriteProduct) return;
 
@@ -41,6 +42,25 @@ export default function ShareYourRoutine({
         year: 'numeric',
       }),
     };
+
+    // Save to Supabase in real-time
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        await supabase.from('user_routines').insert([
+          {
+            name: newRoutine.name,
+            occupation: newRoutine.occupation,
+            location: newRoutine.location,
+            title: newRoutine.title,
+            routine: newRoutine.routine,
+            favorite_product: newRoutine.favoriteProduct,
+          }
+        ]);
+      } catch (err) {
+        console.warn('Supabase routine save notice:', err);
+      }
+    }
 
     onAddRoutine(newRoutine);
     setSubmitted(true);
