@@ -10,6 +10,7 @@ interface HeaderProps {
   setSearchQuery: (query: string) => void;
   onOpenShop: () => void;
   onOpenAbout?: () => void;
+  onOpenAIOverview?: () => void;
   onOpenShare: () => void;
   onOpenCreateArticle?: () => void;
   bookmarksCount: number;
@@ -25,6 +26,7 @@ export default function Header({
   setSearchQuery,
   onOpenShop,
   onOpenAbout,
+  onOpenAIOverview,
   onOpenShare,
   onOpenCreateArticle,
   bookmarksCount,
@@ -144,6 +146,19 @@ export default function Header({
               }`}
             >
               About
+            </button>
+          )}
+
+          {/* Google AI Digest Link */}
+          {onOpenAIOverview && (
+            <button
+              id="nav-ai-digest-btn"
+              onClick={onOpenAIOverview}
+              className="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-rose-50 hover:bg-rose-100/80 text-rose-700 hover:text-rose-900 border border-rose-200/70 text-[10px] font-mono tracking-wider font-semibold transition-all cursor-pointer shadow-2xs"
+              title="Google AI Overview & Daily Digest"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              <span>AI Digest</span>
             </button>
           )}
 
@@ -280,6 +295,20 @@ export default function Header({
                 }`}
               >
                 About
+              </button>
+            )}
+
+            {onOpenAIOverview && (
+              <button
+                id="mobile-nav-ai-digest-btn"
+                onClick={() => {
+                  onOpenAIOverview();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-left py-1 text-rose-700 font-semibold flex items-center space-x-1.5"
+              >
+                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                <span>Google AI Overview</span>
               </button>
             )}
 

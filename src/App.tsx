@@ -23,6 +23,7 @@ import ShopView from './components/ShopView';
 import AijayChatbot from './components/AijayChatbot';
 import CreateArticleModal from './components/CreateArticleModal';
 import AboutSection from './components/AboutSection';
+import GoogleAIOverview from './components/GoogleAIOverview';
 import { InstagramIcon, TikTokIcon, WhatsAppIcon, TURPEEN_SOCIAL_LINKS } from './components/SocialIcons';
 import { getSupabase } from './lib/supabase';
 import { parseImagesFromRow, parseBlocksFromRow, parseArticleFromRow } from './utils/imageParser';
@@ -346,6 +347,16 @@ export default function App() {
           setCurrentView('about');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
+        onOpenAIOverview={() => {
+          setSelectedArticle(null);
+          setCurrentView('feed');
+          setActiveCategory(null);
+          setSearchQuery('');
+          setTimeout(() => {
+            const el = document.getElementById('google-ai-overview-anchor');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        }}
         onOpenShare={() => setIsShareOpen(true)}
         onOpenCreateArticle={() => setIsCreateArticleOpen(true)}
         bookmarksCount={bookmarks.length}
@@ -394,6 +405,22 @@ export default function App() {
                 secondaryHeroArticle={secondaryHeroArticle}
                 onSelectArticle={setSelectedArticle}
               />
+            )}
+
+            {/* Google AI Overview • Daily Beauty Digest */}
+            {!activeCategory && !searchQuery && !showBookmarksOnly && (
+              <div id="google-ai-overview-anchor">
+                <GoogleAIOverview
+                  articles={articles}
+                  userRoutines={userRoutines}
+                  onSelectArticle={setSelectedArticle}
+                  onOpenShop={() => {
+                    setSelectedArticle(null);
+                    setCurrentView('shop');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              </div>
             )}
 
             {/* Main Content splits (Latest vs. Sidebar) */}

@@ -3,6 +3,7 @@ import { Heart, ArrowLeft, Send, MessageSquare, Share2, BookmarkCheck, Check } f
 import { Article, Product, ArticleContentBlock } from '../types';
 import { GLOSSIER_PRODUCTS } from '../data';
 import { handleImageError, DEFAULT_FALLBACK_IMAGE, parseBlocksFromRow } from '../utils/imageParser';
+import GoogleAIArticleSummary from './GoogleAIArticleSummary';
 
 interface ArticleViewProps {
   article: Article;
@@ -255,6 +256,9 @@ export default function ArticleView({
               </span>
             </div>
           </div>
+
+          {/* Google AI Summary Module */}
+          <GoogleAIArticleSummary article={article} />
 
           {/* Rich Content Blocks */}
           <div className="prose prose-neutral max-w-3xl font-serif text-base sm:text-lg text-neutral-800 leading-relaxed space-y-6 pt-2">

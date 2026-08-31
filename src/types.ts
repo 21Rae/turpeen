@@ -71,3 +71,38 @@ export interface ShopProduct {
   swatches?: { name: string; color: string }[];
   description?: string;
 }
+
+export interface GoogleAIArticleSummary {
+  executiveSummary: string;
+  keyTakeaways: string[];
+  routineHighlights?: { step: string; tip: string }[];
+  productInsights?: { product: string; benefit: string }[];
+  readingTimeSavings?: string;
+  skinTypeFocus?: string;
+  editorsQuote?: string;
+}
+
+export interface GoogleAIDigestTheme {
+  topic: string;
+  tag: string;
+  description: string;
+}
+
+export interface GoogleAIDigestResult {
+  headline: string;
+  summary: string;
+  keyStats: { label: string; value: string }[];
+  trendingThemes: GoogleAIDigestTheme[];
+  editorsTake: string;
+  holyGrailPicks: { name: string; reason: string }[];
+  generatedAt: string;
+}
+
+export interface GoogleAIProductInsight {
+  headline: string;
+  formulationOverview: string;
+  keyActives: { name: string; function: string }[];
+  skinTypeMatch: string;
+  howToLayer: string;
+  editorVerdict: string;
+}

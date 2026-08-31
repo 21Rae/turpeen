@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, X, Check, ArrowRight, ArrowLeft, ExternalLink, RefreshCw } from 'lucide-react';
+import { Phone, X, Check, ArrowRight, ArrowLeft, ExternalLink, RefreshCw, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TurpeenLogo } from './TurpeenLogo';
 import { WhatsAppIcon, TURPEEN_SOCIAL_LINKS } from './SocialIcons';
 import { ShopProduct } from '../types';
 import { getSupabase } from '../lib/supabase';
 import { parseProductFromRow } from '../utils/imageParser';
+import GoogleAIProductInsightModal from './GoogleAIProductInsightModal';
 
 interface ShopViewProps {
   onBack: () => void;
@@ -139,6 +140,7 @@ export default function ShopView({ onBack }: ShopViewProps) {
   const [products, setProducts] = useState<ShopProduct[]>(SHOP_PRODUCTS);
   const [selectedCategory, setSelectedCategory] = useState<string>('SHOP ALL');
   const [selectedProductForOrder, setSelectedProductForOrder] = useState<ShopProduct | null>(null);
+  const [selectedAIProduct, setSelectedAIProduct] = useState<ShopProduct | null>(null);
   const [isLiveSyncing, setIsLiveSyncing] = useState<boolean>(true);
   
   // Callback Request state
@@ -455,15 +457,26 @@ export default function ShopView({ onBack }: ShopViewProps) {
                     )}
                   </div>
 
-                  {/* Call to Order Button (Replaced Add to Bag) */}
-                  <button
-                    id={`call-order-btn-${product.id}`}
-                    onClick={() => handleCallToOrder(product)}
-                    className="w-full bg-black hover:bg-neutral-800 text-white font-mono text-[10px] tracking-widest uppercase py-3 transition-transform duration-150 active:scale-98 cursor-pointer flex items-center justify-center space-x-2 font-bold shadow-xs mt-2"
-                  >
-                    <Phone className="w-3 h-3 text-rose-500 fill-rose-500 animate-pulse" />
-                    <span>Call to order</span>
-                  </button>
+                  {/* Call to Order and AI Breakdown Buttons */}
+                  <div className="space-y-1.5 mt-2">
+                    <button
+                      id={`ai-breakdown-btn-${product.id}`}
+                      onClick={() => setSelectedAIProduct(product)}
+                      className="w-full bg-rose-50/80 hover:bg-rose-100/80 text-rose-800 border border-rose-200/80 font-mono text-[9px] tracking-wider uppercase py-1.5 transition-colors cursor-pointer flex items-center justify-center space-x-1.5 font-medium rounded-xs shadow-2xs"
+                    >
+                      <Sparkles className="w-3 h-3 text-rose-600" />
+                      <span>Google AI Breakdown</span>
+                    </button>
+
+                    <button
+                      id={`call-order-btn-${product.id}`}
+                      onClick={() => handleCallToOrder(product)}
+                      className="w-full bg-black hover:bg-neutral-800 text-white font-mono text-[10px] tracking-widest uppercase py-3 transition-transform duration-150 active:scale-98 cursor-pointer flex items-center justify-center space-x-2 font-bold shadow-xs"
+                    >
+                      <Phone className="w-3 h-3 text-rose-500 fill-rose-500 animate-pulse" />
+                      <span>Call to order</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -652,6 +665,12 @@ export default function ShopView({ onBack }: ShopViewProps) {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Google AI Formulation Insight Modal */}
+      <GoogleAIProductInsightModal
+        product={selectedAIProduct}
+        onClose={() => setSelectedAIProduct(null)}
+      />
 
     </div>
   );

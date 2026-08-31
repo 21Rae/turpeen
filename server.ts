@@ -122,7 +122,7 @@ Always stay in character as Aijay. If someone asks about unrelated topics, polit
         });
 
         const response = await gemini.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.7-flash",
           contents: formattedContents,
           config: {
             systemInstruction: systemInstruction,
@@ -138,7 +138,7 @@ Always stay in character as Aijay. If someone asks about unrelated topics, polit
 
       return res.status(500).json({
         error:
-          "OpenAI API key is not configured. Please add OPENAI_API_KEY in your environment secrets.",
+          "AI service is not configured. Please ensure GEMINI_API_KEY is available.",
       });
     } catch (error: any) {
       console.error("Chat API Error:", error);
@@ -146,6 +146,230 @@ Always stay in character as Aijay. If someone asks about unrelated topics, polit
         error:
           error.message ||
           "An error occurred while communicating with the AI service.",
+      });
+    }
+  });
+
+  // Dedicated Google AI Summary Endpoint
+  app.post("/api/gemini/summarize", async (req, res) => {
+    try {
+      const { type, article, product, websiteData } = req.body;
+
+      const gemini = getGeminiClient();
+      if (!gemini) {
+        return res.status(503).json({
+          error: "Google Gemini AI is not initialized. Please ensure GEMINI_API_KEY is set in your environment.",
+        });
+      }
+
+      // CASE 1: Article Summary
+      if (type === "article" || (!type && article)) {
+        const articleTitle = article?.title || "Untitled Article";
+        const articleAuthor = article?.author || "Turpeen Editorial";
+        const articleCategory = article?.category || "Beauty & Skincare";
+        const articleSubtitle = article?.subtitle || "";
+        const articleExcerpt = article?.excerpt || "";
+        
+        let textBody = "";
+        if (Array.isArray(article?.blocks)) {
+          textBody = article.blocks
+            .map((b: any) => b.text || b.productDesc || b.authorQuote || "")
+            .filter(Boolean)
+            .join("\n\n");
+        }
+        if (!textBody) {
+          textBody = articleExcerpt || articleSubtitle || articleTitle;
+        }
+
+        const prompt = `You are the Google AI Editorial Beauty Summarizer for Turpeen Cosmetics.
+Analyze the following beauty article/profile and generate a structured executive AI Summary with high-fashion editorial clarity.
+
+Article Details:
+Title: ${articleTitle}
+Subtitle: ${articleSubtitle}
+Author: ${articleAuthor}
+Category: ${articleCategory}
+
+Full Content:
+${textBody.slice(0, 5000)}
+
+Please return a valid JSON object matching this exact schema:
+{
+  "executiveSummary": "A punchy, informative 2-3 sentence overview capturing the spirit, person, and key beauty philosophy of the article.",
+  "keyTakeaways": [
+    "Takeaway 1: Essential skincare or beauty technique mentioned",
+    "Takeaway 2: Actionable advice on product usage, habits, or mindset",
+    "Takeaway 3: A signature routine or lifestyle rule"
+  ],
+  "routineHighlights": [
+    { "step": "Morning/Evening Step", "tip": "Concise method or product recommendation" }
+  ],
+  "productInsights": [
+    { "product": "Mentioned Product Name", "benefit": "Why they love it or what skin benefit it delivers" }
+  ],
+  "readingTimeSavings": "3 min saved",
+  "skinTypeFocus": "All Skin Types / Glow-Focused / Sensitive",
+  "editorsQuote": "A memorable, inspiring beauty quote summarizing the article's ethos."
+}`;
+
+        const response = await gemini.models.generateContent({
+          model: "gemini-3.7-flash",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            temperature: 0.3,
+          },
+        });
+
+        const rawText = response.text || "{}";
+        let parsed;
+        try {
+          parsed = JSON.parse(rawText);
+        } catch (e) {
+          parsed = {
+            executiveSummary: rawText.slice(0, 250),
+            keyTakeaways: [
+              "Focus on consistent skin hydration and barrier protection.",
+              "Less is more: multi-use hero products elevate daily routines.",
+              "Tailor your skincare rituals to your skin's daily moisture needs."
+            ],
+            readingTimeSavings: "2 min saved",
+            skinTypeFocus: "Universal / All Skin Types",
+          };
+        }
+
+        return res.json({ summary: parsed, provider: "google-gemini-3.7-flash" });
+      }
+
+      // CASE 2: Whole Website / Beauty Digest
+      if (type === "digest") {
+        const articlesList = Array.isArray(websiteData?.articles)
+          ? websiteData.articles.slice(0, 10).map((a: any) => `- "${a.title}" by ${a.author} (${a.category}): ${a.excerpt}`).join("\n")
+          : "Curated Turpeen Cosmetics Top Shelves, Interviews, Makeup, and Skincare Guides.";
+
+        const routinesList = Array.isArray(websiteData?.routines)
+          ? websiteData.routines.slice(0, 5).map((r: any) => `- Routine by ${r.name} (${r.location}): Favorite is ${r.favoriteProduct}. "${r.title}"`).join("\n")
+          : "Community shared beauty routines from Lagos to worldwide.";
+
+        const prompt = `You are the Google AI Editorial Digest Engine for Turpeen Cosmetics.
+Synthesize the current editorial publications, reader routines, and beauty philosophy into a sleek, daily executive Google AI Beauty Overview.
+
+Website Content Snapshot:
+Articles:
+${articlesList}
+
+Community Routines:
+${routinesList}
+
+Return a valid JSON object matching this structure:
+{
+  "headline": "Today's Google AI Editorial Digest: Glowing Skin, Intentional Routines & Lagos Beauty Culture",
+  "summary": "An insightful 2-sentence synthesis of today's key editorial themes across skincare minimalism, effortless makeup, and community holy grails.",
+  "keyStats": [
+    { "label": "Active Profiles", "value": "12+ Stories" },
+    { "label": "Top Trending Category", "value": "Skincare & Dewy Finishes" },
+    { "label": "Core Philosophy", "value": "Skin First, Makeup Second" }
+  ],
+  "trendingThemes": [
+    { "topic": "Hydration First", "tag": "SKINCARE", "description": "Prioritizing hydrating cleansers and oil-serum glow enhancers over heavy coverage." },
+    { "topic": "Effortless Grooming", "tag": "MAKEUP", "description": "Fluffy, natural brows and balmy lip tints dominate community favourites." },
+    { "topic": "Community Holy Grails", "tag": "TOP SHELF", "description": "Real beauty enthusiasts sharing multi-use staples for tropical and continental climates." }
+  ],
+  "editorsTake": "Beauty in 2026 is defined by ritual and authenticity: nourishing formulas that celebrate personal skin texture with luminous results.",
+  "holyGrailPicks": [
+    { "name": "Turpeen Futuredew", "reason": "Oil-serum hybrid that locks in an all-day glass-skin radiance." },
+    { "name": "Turpeen Boy Brow", "reason": "The quintessential pomade for sculpted, feathery arch definition." }
+  ],
+  "generatedAt": "Today"
+}`;
+
+        const response = await gemini.models.generateContent({
+          model: "gemini-3.7-flash",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            temperature: 0.3,
+          },
+        });
+
+        const rawText = response.text || "{}";
+        let parsed;
+        try {
+          parsed = JSON.parse(rawText);
+        } catch (e) {
+          parsed = {
+            headline: "Google AI Beauty Digest • Turpeen Cosmetics",
+            summary: "Today's editorial briefing curates simplified routines, barrier-first skincare, and effortless makeup techniques.",
+            trendingThemes: [],
+            editorsTake: "Nourishing formulations and intentional beauty rituals lead today's top shelves.",
+            keyStats: [{ label: "Stories", value: "Curated Daily" }],
+            holyGrailPicks: [],
+            generatedAt: "Today"
+          };
+        }
+
+        return res.json({ digest: parsed, provider: "google-gemini-3.7-flash" });
+      }
+
+      // CASE 3: Product Breakdown
+      if (type === "product") {
+        const prodName = product?.name || "Turpeen Product";
+        const prodPrice = product?.price || "$20";
+        const prodDesc = product?.description || product?.subtitle || "";
+        const prodCat = product?.category || "Cosmetics";
+
+        const prompt = `You are Google AI Cosmetic Formulation Specialist.
+Provide an intelligent formulation insight for:
+Product: ${prodName}
+Category: ${prodCat}
+Price: ${prodPrice}
+Description: ${prodDesc}
+
+Return a valid JSON object matching this structure:
+{
+  "headline": "Why it's a cult favorite formula",
+  "formulationOverview": "A 2-sentence breakdown of the texture, skin feel, and signature benefits.",
+  "keyActives": [
+    { "name": "Key Ingredient / Technology", "function": "Specific skin or makeup benefit" },
+    { "name": "Hydration / Nourishment Agent", "function": "Long-term skin wellness effect" }
+  ],
+  "skinTypeMatch": "Best for All Skin Types, especially dehydrated, dry, or normal textures.",
+  "howToLayer": "How to seamlessly incorporate this step into morning or evening beauty regimens.",
+  "editorVerdict": "A 1-sentence editorial recommendation on why this belongs in your cosmetic pouch."
+}`;
+
+        const response = await gemini.models.generateContent({
+          model: "gemini-3.7-flash",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            temperature: 0.3,
+          },
+        });
+
+        const rawText = response.text || "{}";
+        let parsed;
+        try {
+          parsed = JSON.parse(rawText);
+        } catch (e) {
+          parsed = {
+            headline: `${prodName} AI Insight`,
+            formulationOverview: prodDesc || "A luxurious, dermatologist-tested formula designed for effortless everyday wear.",
+            keyActives: [{ name: "Hydrating Complex", function: "Locks in moisture" }],
+            skinTypeMatch: "All skin types",
+            howToLayer: "Apply as desired throughout the day.",
+            editorVerdict: "A dependable staple for everyday radiance."
+          };
+        }
+
+        return res.json({ insight: parsed, provider: "google-gemini-3.7-flash" });
+      }
+
+      return res.status(400).json({ error: "Invalid summary request type" });
+    } catch (err: any) {
+      console.error("Gemini Summarize API Error:", err);
+      res.status(500).json({
+        error: err.message || "Failed to generate Google AI summary",
       });
     }
   });
