@@ -420,18 +420,6 @@ export default function ShopView({ onBack }: ShopViewProps) {
                       {product.subtitle}
                     </p>
 
-                    {/* Price with Original support */}
-                    <div className="flex items-center space-x-2 mt-2">
-                      <span className="font-mono text-xs font-bold text-black">
-                        {product.price}
-                      </span>
-                      {product.originalPrice && (
-                        <span className="font-mono text-[10px] text-gray-400 line-through">
-                          {product.originalPrice}
-                        </span>
-                      )}
-                    </div>
-
                     {/* Swatches selector if applicable */}
                     {product.swatches && (
                       <div className="mt-4 space-y-1.5">
@@ -457,15 +445,15 @@ export default function ShopView({ onBack }: ShopViewProps) {
                     )}
                   </div>
 
-                  {/* Call to Order and AI Breakdown Buttons */}
+                  {/* Call to Order and AI Review Buttons */}
                   <div className="space-y-1.5 mt-2">
                     <button
-                      id={`ai-breakdown-btn-${product.id}`}
+                      id={`ai-review-btn-${product.id}`}
                       onClick={() => setSelectedAIProduct(product)}
                       className="w-full bg-rose-50/80 hover:bg-rose-100/80 text-rose-800 border border-rose-200/80 font-mono text-[9px] tracking-wider uppercase py-1.5 transition-colors cursor-pointer flex items-center justify-center space-x-1.5 font-medium rounded-xs shadow-2xs"
                     >
                       <Sparkles className="w-3 h-3 text-rose-600" />
-                      <span>Google AI Breakdown</span>
+                      <span>AI Review</span>
                     </button>
 
                     <button
@@ -556,11 +544,11 @@ export default function ShopView({ onBack }: ShopViewProps) {
                     {selectedProductForOrder.name}
                   </h3>
                   <div className="flex items-center space-x-2 mt-1">
-                    <span className="font-mono text-sm font-bold text-black">
-                      {selectedProductForOrder.price}
+                    <span className="text-[11px] text-gray-500 font-light">
+                      {selectedProductForOrder.subtitle}
                     </span>
                     {selectedSwatches[selectedProductForOrder.id] && selectedProductForOrder.swatches && (
-                      <span className="text-[10px] font-mono text-gray-500">
+                      <span className="text-[10px] font-mono text-gray-600 font-medium">
                         • {selectedSwatches[selectedProductForOrder.id]}
                       </span>
                     )}
@@ -585,7 +573,7 @@ export default function ShopView({ onBack }: ShopViewProps) {
                   <a
                     id="shop-modal-whatsapp-btn"
                     href={`https://wa.me/2347062296118?text=${encodeURIComponent(
-                      `Hello Turpeen Cosmetics! I would like to order "${selectedProductForOrder.name}" (${selectedProductForOrder.price})${
+                      `Hello Turpeen Cosmetics! I would like to order "${selectedProductForOrder.name}"${
                         selectedSwatches[selectedProductForOrder.id] ? ` in shade/color "${selectedSwatches[selectedProductForOrder.id]}"` : ''
                       }. Please confirm availability and delivery to my location.`
                     )}`}

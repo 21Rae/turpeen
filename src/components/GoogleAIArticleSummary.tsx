@@ -30,7 +30,7 @@ export default function GoogleAIArticleSummary({ article }: GoogleAIArticleSumma
 
     setIsLoading(true);
     try {
-      const res = await fetch('/api/gemini/summarize', {
+      const res = await fetch('/api/ai/summarize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -87,7 +87,7 @@ export default function GoogleAIArticleSummary({ article }: GoogleAIArticleSumma
 
   const handleCopy = () => {
     if (!summary) return;
-    const text = `✦ Google AI Summary: ${article.title}\n\n${summary.executiveSummary}\n\nKey Takeaways:\n${summary.keyTakeaways.map(t => `• ${t}`).join('\n')}\n\nEditor's Ethos: "${summary.editorsQuote || ''}"`;
+    const text = `✦ AI Review: ${article.title}\n\n${summary.executiveSummary}\n\nKey Takeaways:\n${summary.keyTakeaways.map(t => `• ${t}`).join('\n')}\n\nEditor's Ethos: "${summary.editorsQuote || ''}"`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -107,12 +107,11 @@ export default function GoogleAIArticleSummary({ article }: GoogleAIArticleSumma
           <div>
             <div className="flex items-center space-x-2">
               <span className="text-[10px] font-mono tracking-widest text-rose-600 font-bold uppercase">
-                Google AI Overview
+                AI Review
               </span>
-              <span className="text-[10px] text-gray-400 font-mono hidden sm:inline">• gemini-3.7-flash</span>
             </div>
             <h4 className="font-serif text-base sm:text-lg font-bold text-neutral-900 leading-none mt-0.5">
-              Article Summary & Key Takeaways
+              Editorial AI Review & Takeaways
             </h4>
           </div>
         </div>
@@ -136,7 +135,7 @@ export default function GoogleAIArticleSummary({ article }: GoogleAIArticleSumma
           <button
             onClick={handleCopy}
             className="p-1.5 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer text-[10px] font-mono flex items-center space-x-1"
-            title="Copy Summary"
+            title="Copy Review"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
@@ -145,7 +144,7 @@ export default function GoogleAIArticleSummary({ article }: GoogleAIArticleSumma
             onClick={() => fetchArticleSummary(true)}
             disabled={isLoading}
             className="p-1.5 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer disabled:opacity-50"
-            title="Regenerate Summary"
+            title="Regenerate Review"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-rose-500' : ''}`} />
           </button>
@@ -168,7 +167,7 @@ export default function GoogleAIArticleSummary({ article }: GoogleAIArticleSumma
             <Sparkles className="w-4 h-4 text-rose-600" />
           </div>
           <p className="text-xs font-mono text-gray-500">
-            Synthesizing key beauty insights with Google Gemini...
+            Synthesizing key beauty insights...
           </p>
         </div>
       )}

@@ -39,7 +39,7 @@ export default function GoogleAIOverview({
 
     setIsLoading(true);
     try {
-      const response不易 = await fetch('/api/gemini/summarize', {
+      const response = await fetch('/api/ai/summarize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -61,8 +61,8 @@ export default function GoogleAIOverview({
         }),
       });
 
-      if (response不易.ok) {
-        const data = await response不易.json();
+      if (response.ok) {
+        const data = await response.json();
         if (data.digest) {
           setDigest(data.digest);
           sessionStorage.setItem(cacheKey, JSON.stringify(data.digest));
@@ -73,7 +73,7 @@ export default function GoogleAIOverview({
     } catch (e) {
       // Elegant fallback digest if network is offline
       const fallback: GoogleAIDigestResult = {
-        headline: "Today's Google AI Editorial Digest: Glowing Skin, Intentional Routines & Lagos Beauty Culture",
+        headline: "Today's AI Editorial Digest: Glowing Skin, Intentional Routines & Lagos Beauty Culture",
         summary: "Across today's featured Top Shelves and reader routines, the overarching beauty philosophy centers on dewy barrier hydration, simplified active steps, and lightweight grooming essentials designed for effortless confidence.",
         keyStats: [
           { label: "Curated Profiles", value: `${articles.length}+ Stories` },
@@ -107,7 +107,7 @@ export default function GoogleAIOverview({
 
   const handleCopyDigest = () => {
     if (!digest) return;
-    const text = `✦ Google AI Beauty Overview — Turpeen Cosmetics\n\n${digest.headline}\n\n${digest.summary}\n\nEditor's Verdict: ${digest.editorsTake}\n\nTrending Themes:\n${digest.trendingThemes.map(t => `• [${t.tag}] ${t.topic}: ${t.description}`).join('\n')}`;
+    const text = `✦ AI Editorial Digest — Turpeen Cosmetics\n\n${digest.headline}\n\n${digest.summary}\n\nEditor's Verdict: ${digest.editorsTake}\n\nTrending Themes:\n${digest.trendingThemes.map(t => `• [${t.tag}] ${t.topic}: ${t.description}`).join('\n')}`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -127,10 +127,9 @@ export default function GoogleAIOverview({
           <div>
             <div className="flex items-center space-x-2">
               <span className="font-mono text-[9px] sm:text-[10px] tracking-widest text-rose-300 font-bold uppercase flex items-center space-x-1">
-                <span>Google AI Overview</span>
+                <span>AI Review</span>
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" />
               </span>
-              <span className="text-[10px] text-neutral-400 font-mono hidden md:inline">• Gemini 3.7 Flash</span>
             </div>
             <h3 className="font-serif text-lg sm:text-xl font-bold tracking-tight text-neutral-100 flex items-center gap-2">
               Today's Beauty & Editorial Digest
@@ -164,7 +163,7 @@ export default function GoogleAIOverview({
             onClick={() => fetchDigest(true)}
             disabled={isLoading}
             className="p-2 rounded-lg border border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs transition-colors cursor-pointer disabled:opacity-50"
-            title="Regenerate with Google AI"
+            title="Regenerate AI Digest"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-rose-400' : ''}`} />
           </button>
@@ -263,7 +262,7 @@ export default function GoogleAIOverview({
                     <Sparkles className="w-5 h-5 text-rose-300" />
                   </div>
                   <p className="text-xs font-mono text-neutral-400 uppercase tracking-wider">
-                    Analyzing full editorial catalogue with Google Gemini 3.7 Flash...
+                    Analyzing full editorial catalogue...
                   </p>
                 </div>
               )}
@@ -381,7 +380,7 @@ export default function GoogleAIOverview({
               {/* Footer Note */}
               <div className="pt-4 border-t border-neutral-800 flex flex-col sm:flex-row items-center justify-between text-[10px] font-mono text-neutral-400 gap-2">
                 <div className="flex items-center space-x-1.5">
-                  <span>⚡ Powered by Google GenAI SDK (gemini-3.7-flash)</span>
+                  <span>⚡ AI Review Engine</span>
                   <span>•</span>
                   <span>Synchronized with active editorial feed</span>
                 </div>

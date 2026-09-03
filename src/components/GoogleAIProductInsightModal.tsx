@@ -33,7 +33,7 @@ export default function GoogleAIProductInsightModal({
 
       setIsLoading(true);
       try {
-        const res = await fetch('/api/gemini/summarize', {
+        const res = await fetch('/api/ai/summarize', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -41,7 +41,6 @@ export default function GoogleAIProductInsightModal({
             product: {
               name: product.name,
               category: product.category,
-              price: product.price,
               description: product.description || product.subtitle,
             },
           }),
@@ -97,10 +96,10 @@ export default function GoogleAIProductInsightModal({
               </div>
               <div>
                 <span className="text-[9px] font-mono tracking-widest text-rose-300 uppercase font-bold block">
-                  Google AI Overview
+                  AI Review
                 </span>
                 <h3 className="font-serif text-base font-bold text-white">
-                  Formulation Breakdown
+                  Formulation & Product Review
                 </h3>
               </div>
             </div>
@@ -130,7 +129,7 @@ export default function GoogleAIProductInsightModal({
                 <h4 className="font-serif text-lg font-bold text-neutral-900 leading-snug">
                   {product.name}
                 </h4>
-                <p className="text-xs text-neutral-500 font-mono">{product.price}</p>
+                <p className="text-xs text-neutral-500 font-light">{product.subtitle}</p>
               </div>
             </div>
 
@@ -141,7 +140,7 @@ export default function GoogleAIProductInsightModal({
                   <Sparkles className="w-4 h-4 text-rose-600" />
                 </div>
                 <p className="text-xs font-mono text-neutral-500">
-                  Analyzing ingredients with Google Gemini...
+                  Analyzing formulation & skin benefits...
                 </p>
               </div>
             )}
@@ -200,7 +199,7 @@ export default function GoogleAIProductInsightModal({
                 <div className="p-4 rounded-xl bg-neutral-900 text-white space-y-1">
                   <div className="flex items-center space-x-1.5 text-[10px] font-mono text-rose-300 uppercase font-bold">
                     <ThumbsUp className="w-3 h-3" />
-                    <span>Google AI Verdict</span>
+                    <span>AI Verdict</span>
                   </div>
                   <p className="text-xs text-neutral-200 font-serif italic leading-relaxed">
                     “{insight.editorVerdict}”
@@ -216,7 +215,7 @@ export default function GoogleAIProductInsightModal({
                 onClick={onClose}
                 className="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-mono text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
               >
-                Close Formulation Sheet
+                Close AI Review
               </button>
             </div>
 

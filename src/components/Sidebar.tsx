@@ -27,14 +27,14 @@ export default function Sidebar({
   return (
     <aside className="space-y-10 lg:pl-4">
       
-      {/* 0. Google AI Quick Brief Widget */}
+      {/* 0. AI Review Quick Brief Widget */}
       <div className="bg-gradient-to-br from-neutral-900 via-neutral-950 to-neutral-900 border border-neutral-800 p-5 rounded-xl text-white shadow-sm space-y-3">
         <div className="flex items-center space-x-2">
           <div className="w-6 h-6 rounded-md bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-300">
             <Sparkles className="w-3.5 h-3.5" />
           </div>
           <span className="text-[9px] font-mono tracking-widest text-rose-300 uppercase font-bold">
-            Google AI Overview
+            AI Review
           </span>
         </div>
         <div>
@@ -46,7 +46,7 @@ export default function Sidebar({
           </p>
         </div>
         <div className="pt-1 flex items-center justify-between text-[10px] font-mono text-neutral-400 border-t border-neutral-800">
-          <span>Gemini 3.7 Flash</span>
+          <span>AI Review</span>
           <span className="text-rose-300">Updated Daily</span>
         </div>
       </div>
