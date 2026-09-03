@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, X, Check, ArrowRight, ArrowLeft, ExternalLink, RefreshCw, Sparkles } from 'lucide-react';
+import { Phone, X, Check, ArrowRight, ArrowLeft, ExternalLink, RefreshCw, Sparkles, Search, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TurpeenLogo } from './TurpeenLogo';
 import { WhatsAppIcon, TURPEEN_SOCIAL_LINKS } from './SocialIcons';
@@ -12,133 +12,12 @@ interface ShopViewProps {
   onBack: () => void;
 }
 
-const SHOP_PRODUCTS: ShopProduct[] = [
-  {
-    id: 'sb-1',
-    name: 'Boy Brow',
-    subtitle: 'Grooming pomade',
-    price: '₦35,600',
-    badge: 'BEST SELLER',
-    badgeType: 'best',
-    image: 'https://images.unsplash.com/photo-1625093742435-6fa192b6fb10?auto=format&fit=crop&w=600&q=80',
-    category: 'makeup',
-    swatches: [
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Brown', color: '#4B3621' },
-      { name: 'Auburn', color: '#9E5B38' },
-      { name: 'Blonde', color: '#D2B48C' },
-      { name: 'Clear', color: '#F5F5F5' },
-    ],
-  },
-  {
-    id: 'sb-2',
-    name: 'Fragrance Duo',
-    subtitle: 'Choose your scents',
-    price: '₦225,420',
-    originalPrice: '₦268,200',
-    badge: 'MIX + MATCH',
-    badgeType: 'mix',
-    image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80',
-    category: 'sets',
-  },
-  {
-    id: 'sb-3',
-    name: 'Fragrance Two Ways',
-    subtitle: 'Choose your scents',
-    price: '₦155,740',
-    originalPrice: '₦184,800',
-    badge: 'MIX + MATCH',
-    badgeType: 'mix',
-    image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80',
-    category: 'sets',
-  },
-  {
-    id: 'sb-4',
-    name: 'Balm Dotcom',
-    subtitle: 'Nourishing lip balm',
-    price: '₦25,900',
-    badge: 'BEST SELLER',
-    badgeType: 'best',
-    image: 'https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&w=600&q=80',
-    category: 'balms',
-    swatches: [
-      { name: 'Wild Cherry', color: '#D2143A' },
-      { name: 'Birthday', color: '#E8CCD7' },
-      { name: 'Coconut', color: '#FFF8E7' },
-      { name: 'Mango', color: '#FF8000' },
-      { name: 'Mint', color: '#98FF98' },
-      { name: 'Rose', color: '#FFC0CB' },
-    ],
-  },
-  {
-    id: 'sb-5',
-    name: 'Cloud Paint Blush',
-    subtitle: 'Seamless cheek color',
-    price: '₦58,900',
-    badge: 'BEST SELLER',
-    badgeType: 'best',
-    image: 'https://images.unsplash.com/photo-1631730359575-38e4755d772b?auto=format&fit=crop&w=600&q=80',
-    category: 'makeup',
-    swatches: [
-      { name: 'Puff', color: '#FFC5D9' },
-      { name: 'Beam', color: '#FFA07A' },
-      { name: 'Haze', color: '#C71585' },
-      { name: 'Dusk', color: '#CD853F' },
-      { name: 'Dawn', color: '#FF4500' },
-    ],
-  },
-  {
-    id: 'sb-6',
-    name: 'Cloud Paint Bronzer',
-    subtitle: 'Seamless cheek color',
-    price: '₦25,900',
-    originalPrice: '₦28,900',
-    badge: 'BEST SELLER',
-    badgeType: 'best',
-    image: 'https://images.unsplash.com/photo-1608248597481-496100c80836?auto=format&fit=crop&w=600&q=80',
-    category: 'makeup',
-    swatches: [
-      { name: 'Sail', color: '#CD853F' },
-      { name: 'Dune', color: '#8B4513' },
-      { name: 'Solar', color: '#A0522D' },
-      { name: 'Ray', color: '#DEB887' },
-    ],
-  },
-  {
-    id: 'sb-7',
-    name: 'Milky Jelly Cleanser',
-    subtitle: 'Conditioning face wash',
-    price: '₦39,000',
-    badge: 'BEST SELLER',
-    badgeType: 'best',
-    image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80',
-    category: 'skincare',
-  },
-  {
-    id: 'sb-8',
-    name: 'Futuredew',
-    subtitle: 'Oil-serum hybrid',
-    price: '₦48,500',
-    badge: 'TOP-RATED',
-    badgeType: 'rated',
-    image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=600&q=80',
-    category: 'skincare',
-  },
-  {
-    id: 'sb-9',
-    name: 'Turpeen You Perfume',
-    subtitle: 'The personal fragrance',
-    price: '₦112,000',
-    badge: 'NEW',
-    badgeType: 'new',
-    image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80',
-    category: 'fragrance',
-  },
-];
-
 export default function ShopView({ onBack }: ShopViewProps) {
-  const [products, setProducts] = useState<ShopProduct[]>(SHOP_PRODUCTS);
+  const [products, setProducts] = useState<ShopProduct[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('SHOP ALL');
+  const [displayCount, setDisplayCount] = useState<number>(36);
   const [selectedProductForOrder, setSelectedProductForOrder] = useState<ShopProduct | null>(null);
   const [selectedAIProduct, setSelectedAIProduct] = useState<ShopProduct | null>(null);
   const [isLiveSyncing, setIsLiveSyncing] = useState<boolean>(true);
@@ -149,34 +28,34 @@ export default function ShopView({ onBack }: ShopViewProps) {
   const [callbackSubmitted, setCallbackSubmitted] = useState(false);
 
   // Swatch selections
-  const [selectedSwatches, setSelectedSwatches] = useState<Record<string, string>>({
-    'sb-1': 'Black',
-    'sb-4': 'Wild Cherry',
-    'sb-5': 'Puff',
-    'sb-6': 'Sail',
-  });
+  const [selectedSwatches, setSelectedSwatches] = useState<Record<string, string>>({});
 
   // Real-Time Database Sync for Products
   useEffect(() => {
     const supabase = getSupabase();
     if (!supabase) {
       setIsLiveSyncing(false);
+      setIsLoading(false);
       return;
     }
 
     const fetchProducts = async () => {
+      setIsLoading(true);
       try {
         const { data, error } = await supabase
           .from('products')
           .select('*')
-          .order('id', { ascending: true });
+          .order('name', { ascending: true })
+          .limit(1000);
 
         if (data && !error && data.length > 0) {
           const dbProducts = data.map(parseProductFromRow);
           setProducts(dbProducts);
         }
       } catch (err) {
-        console.warn('Notice: Using catalogue cache while products table initializes', err);
+        console.warn('Notice: Error fetching products from database:', err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -227,14 +106,12 @@ export default function ShopView({ onBack }: ShopViewProps) {
   }, []);
 
   const categories = [
+    'SHOP ALL',
     'SKINCARE',
-    'MAKEUP',
-    'BALMS',
     'BODY',
     'FRAGRANCE',
-    'GLOSSIER GOODS',
-    'SETS',
-    'SHOP ALL',
+    'BALMS',
+    'MAKEUP',
   ];
 
   const handleSwatchSelect = (productId: string, swatchName: string) => {
@@ -244,9 +121,26 @@ export default function ShopView({ onBack }: ShopViewProps) {
     }));
   };
 
-  const filteredProducts = selectedCategory === 'SHOP ALL'
-    ? products
-    : products.filter(p => p.category === selectedCategory.toLowerCase().replace(' ', ''));
+  const filteredProducts = products.filter((p) => {
+    const matchesCategory =
+      selectedCategory === 'SHOP ALL' ||
+      p.category.toLowerCase() === selectedCategory.toLowerCase();
+    
+    if (!matchesCategory) return false;
+
+    if (!searchQuery.trim()) return true;
+
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      p.name.toLowerCase().includes(q) ||
+      (p.brand && p.brand.toLowerCase().includes(q)) ||
+      (p.subtitle && p.subtitle.toLowerCase().includes(q)) ||
+      (p.category && p.category.toLowerCase().includes(q))
+    );
+  });
+
+  // Visible sliced list for optimized performance
+  const visibleProducts = filteredProducts.slice(0, displayCount);
 
   const handleCallToOrder = (product: ShopProduct) => {
     setSelectedProductForOrder(product);
@@ -308,193 +202,224 @@ export default function ShopView({ onBack }: ShopViewProps) {
       </div>
 
       {/* 1. Shop Category Nav Bar */}
-      <div className="border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto">
-          <div className="flex space-x-8 py-4 justify-start md:justify-center whitespace-nowrap min-w-max text-xs font-mono uppercase tracking-widest font-semibold text-gray-400 select-none">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`hover:text-black transition-all duration-200 relative pb-1 cursor-pointer ${
-                  selectedCategory === cat ? 'text-black border-b border-black font-bold' : ''
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+      <div className="border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur-xs z-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-4 py-3 flex-wrap sm:flex-nowrap">
+            
+            {/* Category tabs */}
+            <div className="flex space-x-6 overflow-x-auto whitespace-nowrap min-w-max text-xs font-mono uppercase tracking-widest font-semibold text-gray-400 select-none py-1">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    setDisplayCount(36);
+                  }}
+                  className={`hover:text-black transition-all duration-200 relative pb-1 cursor-pointer ${
+                    selectedCategory === cat ? 'text-black border-b-2 border-black font-bold' : ''
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* Quick Search Input */}
+            <div className="relative w-full sm:w-64">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setDisplayCount(36);
+                }}
+                placeholder="Search 500+ items..."
+                className="w-full pl-8 pr-3 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg text-xs font-mono text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-neutral-800 focus:bg-white transition-all"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
           </div>
         </div>
       </div>
 
       {/* 2. Sub-Header stats bar */}
-      <div className="border-b border-gray-100 py-3 text-xs font-mono text-gray-500">
+      <div className="border-b border-gray-100 py-3 text-xs font-mono text-gray-500 bg-neutral-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center select-none flex-wrap gap-2">
           <div className="flex items-center space-x-3">
             <span>
-              View <span className="text-black font-bold">({filteredProducts.length} Items)</span>
+              Showing <span className="text-black font-bold">{visibleProducts.length}</span> of <span className="text-black font-bold">{filteredProducts.length} Items</span>
+              {searchQuery && <span className="text-neutral-400 ml-1.5 font-normal">matching "{searchQuery}"</span>}
             </span>
             {isLiveSyncing && (
               <span className="inline-flex items-center space-x-1 text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60 font-mono font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Live DB Connected</span>
+                <span>Database Sync Active</span>
               </span>
             )}
           </div>
           <div className="flex space-x-6 text-[11px]">
-            <span>Category ({selectedCategory})</span>
-            <span>Sort (Featured)</span>
+            <span>Category: <strong className="text-neutral-800">{selectedCategory}</strong></span>
           </div>
         </div>
       </div>
 
-      {/* 3. Grid of Products and Decorative Banners */}
+      {/* 3. Grid of Real Database Products */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          
-          {/* BANNER CARD 1: Meet your furry friend's-soon-to-be favorites */}
-          <div className="border border-gray-100 flex flex-col justify-between overflow-hidden group shadow-xs">
-            <div className="relative aspect-square bg-neutral-100 overflow-hidden flex-1">
-              <img
-                src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=600&q=80"
-                alt="Meet your furry friend's favorites"
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/20 transition-colors duration-300" />
-            </div>
-            <div className="p-5 bg-neutral-50 space-y-3">
-              <p className="font-serif italic text-sm text-neutral-800 leading-snug font-medium">
-                Meet your furry friend’s-soon-to-be favorites.
-              </p>
-              <button
-                onClick={() => setSelectedCategory('SETS')}
-                className="inline-block bg-white border border-gray-200 text-[10px] font-mono tracking-widest uppercase px-4 py-2 font-bold hover:border-black transition-colors duration-150 cursor-pointer"
-              >
-                Shop now
-              </button>
-            </div>
+        {isLoading && products.length === 0 ? (
+          <div className="py-24 text-center space-y-4">
+            <Loader2 className="w-8 h-8 text-neutral-400 animate-spin mx-auto" />
+            <p className="font-mono text-xs text-neutral-500 uppercase tracking-widest">
+              Connecting to Turpeen Product Database...
+            </p>
           </div>
-
-          {/* Dynamic Map of Products */}
-          {filteredProducts.map((product) => {
-            return (
-              <div
-                id={`shop-item-${product.id}`}
-                key={product.id}
-                className="border border-gray-100 flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all duration-300 bg-white"
-              >
-                {/* Image Stage */}
-                <div className="relative aspect-square bg-neutral-100 overflow-hidden border-b border-gray-50">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
-                  />
-                  
-                  {/* Category / Quality badge */}
-                  {product.badge && (
-                    <span className={`absolute top-3 left-3 text-[9px] font-mono tracking-widest px-2.5 py-0.5 uppercase font-bold select-none ${
-                      product.badgeType === 'mix' 
-                        ? 'bg-blue-600 text-white' 
-                        : product.badgeType === 'new'
-                        ? 'bg-neutral-900 text-white'
-                        : product.badgeType === 'rated'
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-rose-50 text-rose-600 border border-rose-100'
-                    }`}>
-                      {product.badge}
-                    </span>
-                  )}
-                </div>
-
-                {/* Info and action area */}
-                <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                  <div>
-                    <div className="flex justify-between items-baseline mb-1.5">
-                      <h4 className="font-serif text-sm sm:text-base font-bold text-black group-hover:text-neutral-700 transition-colors duration-150">
-                        {product.name}
-                      </h4>
-                    </div>
-                    <p className="text-[11px] text-gray-500 font-light leading-tight">
-                      {product.subtitle}
-                    </p>
-
-                    {/* Swatches selector if applicable */}
-                    {product.swatches && (
-                      <div className="mt-4 space-y-1.5">
-                        <span className="text-[8px] font-mono uppercase tracking-widest text-gray-400 font-bold block">
-                          Color: {selectedSwatches[product.id] || product.swatches[0].name}
+        ) : filteredProducts.length === 0 ? (
+          <div className="py-20 text-center border border-dashed border-neutral-200 rounded-xl p-8 space-y-4 max-w-md mx-auto">
+            <p className="font-serif text-lg font-bold text-neutral-800">
+              No products found
+            </p>
+            <p className="text-xs text-neutral-500 font-light">
+              {searchQuery
+                ? `No products match "${searchQuery}" in ${selectedCategory}. Try another search term or category.`
+                : `There are currently no items in category "${selectedCategory}".`}
+            </p>
+            <button
+              onClick={() => {
+                setSelectedCategory('SHOP ALL');
+                setSearchQuery('');
+              }}
+              className="px-4 py-2 bg-neutral-900 text-white font-mono text-xs uppercase tracking-widest rounded-lg hover:bg-neutral-800 transition-colors"
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {visibleProducts.map((product) => {
+                return (
+                  <div
+                    id={`shop-item-${product.id}`}
+                    key={product.id}
+                    className="border border-gray-100 flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all duration-300 bg-white"
+                  >
+                    {/* Image Stage */}
+                    <div className="relative aspect-square bg-neutral-100 overflow-hidden border-b border-gray-50">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
+                        loading="lazy"
+                      />
+                      
+                      {/* Category / Quality badge */}
+                      {product.badge && (
+                        <span className={`absolute top-3 left-3 text-[9px] font-mono tracking-widest px-2.5 py-0.5 uppercase font-bold select-none ${
+                          product.badgeType === 'mix' 
+                            ? 'bg-blue-600 text-white' 
+                            : product.badgeType === 'new'
+                            ? 'bg-neutral-900 text-white'
+                            : product.badgeType === 'rated'
+                            ? 'bg-amber-500 text-white'
+                            : 'bg-rose-50 text-rose-600 border border-rose-100'
+                        }`}>
+                          {product.badge}
                         </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {product.swatches.map((sw) => (
-                            <button
-                              key={sw.name}
-                              onClick={() => handleSwatchSelect(product.id, sw.name)}
-                              className={`w-4 h-4 rounded-full border transition-all duration-150 relative cursor-pointer ${
-                                selectedSwatches[product.id] === sw.name
-                                  ? 'border-black scale-110 shadow-xs ring-1 ring-black/20'
-                                  : 'border-gray-200 hover:scale-105'
-                              }`}
-                              style={{ backgroundColor: sw.color }}
-                              title={sw.name}
-                            />
-                          ))}
+                      )}
+                    </div>
+
+                    {/* Info and action area */}
+                    <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                      <div>
+                        {product.brand && (
+                          <span className="text-[9px] font-mono tracking-wider text-rose-700 uppercase font-semibold block mb-0.5">
+                            {product.brand}
+                          </span>
+                        )}
+                        <div className="flex justify-between items-baseline mb-1.5">
+                          <h4 className="font-serif text-sm sm:text-base font-bold text-black group-hover:text-neutral-700 transition-colors duration-150 line-clamp-2">
+                            {product.name}
+                          </h4>
                         </div>
+                        {product.subtitle && (
+                          <p className="text-[11px] text-gray-500 font-light leading-tight line-clamp-2">
+                            {product.subtitle}
+                          </p>
+                        )}
+
+                        {/* Swatches selector if applicable */}
+                        {product.swatches && product.swatches.length > 0 && (
+                          <div className="mt-4 space-y-1.5">
+                            <span className="text-[8px] font-mono uppercase tracking-widest text-gray-400 font-bold block">
+                              Color: {selectedSwatches[product.id] || product.swatches[0].name}
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {product.swatches.map((sw) => (
+                                <button
+                                  key={sw.name}
+                                  onClick={() => handleSwatchSelect(product.id, sw.name)}
+                                  className={`w-4 h-4 rounded-full border transition-all duration-150 relative cursor-pointer ${
+                                    selectedSwatches[product.id] === sw.name
+                                      ? 'border-black scale-110 shadow-xs ring-1 ring-black/20'
+                                      : 'border-gray-200 hover:scale-105'
+                                  }`}
+                                  style={{ backgroundColor: sw.color }}
+                                  title={sw.name}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Call to Order and AI Review Buttons */}
-                  <div className="space-y-1.5 mt-2">
-                    <button
-                      id={`ai-review-btn-${product.id}`}
-                      onClick={() => setSelectedAIProduct(product)}
-                      className="w-full bg-rose-50/80 hover:bg-rose-100/80 text-rose-800 border border-rose-200/80 font-mono text-[9px] tracking-wider uppercase py-1.5 transition-colors cursor-pointer flex items-center justify-center space-x-1.5 font-medium rounded-xs shadow-2xs"
-                    >
-                      <Sparkles className="w-3 h-3 text-rose-600" />
-                      <span>AI Review</span>
-                    </button>
+                      {/* Call to Order and AI Review Buttons */}
+                      <div className="space-y-1.5 mt-2">
+                        <button
+                          id={`ai-review-btn-${product.id}`}
+                          onClick={() => setSelectedAIProduct(product)}
+                          className="w-full bg-rose-50/80 hover:bg-rose-100/80 text-rose-800 border border-rose-200/80 font-mono text-[9px] tracking-wider uppercase py-1.5 transition-colors cursor-pointer flex items-center justify-center space-x-1.5 font-medium rounded-xs shadow-2xs"
+                        >
+                          <Sparkles className="w-3 h-3 text-rose-600" />
+                          <span>AI Review</span>
+                        </button>
 
-                    <button
-                      id={`call-order-btn-${product.id}`}
-                      onClick={() => handleCallToOrder(product)}
-                      className="w-full bg-black hover:bg-neutral-800 text-white font-mono text-[10px] tracking-widest uppercase py-3 transition-transform duration-150 active:scale-98 cursor-pointer flex items-center justify-center space-x-2 font-bold shadow-xs"
-                    >
-                      <Phone className="w-3 h-3 text-rose-500 fill-rose-500 animate-pulse" />
-                      <span>Call to order</span>
-                    </button>
+                        <button
+                          id={`call-order-btn-${product.id}`}
+                          onClick={() => handleCallToOrder(product)}
+                          className="w-full bg-black hover:bg-neutral-800 text-white font-mono text-[10px] tracking-widest uppercase py-3 transition-transform duration-150 active:scale-98 cursor-pointer flex items-center justify-center space-x-2 font-bold shadow-xs"
+                        >
+                          <Phone className="w-3 h-3 text-rose-500 fill-rose-500 animate-pulse" />
+                          <span>Call to order</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+
+            {/* Load More Button if more products remain */}
+            {displayCount < filteredProducts.length && (
+              <div className="mt-12 text-center">
+                <button
+                  onClick={() => setDisplayCount((prev) => prev + 36)}
+                  className="px-8 py-3 bg-neutral-900 hover:bg-neutral-800 text-white font-mono text-xs uppercase tracking-widest rounded-lg transition-colors cursor-pointer font-semibold shadow-xs"
+                >
+                  Load More Products ({filteredProducts.length - displayCount} remaining)
+                </button>
               </div>
-            );
-          })}
-
-          {/* BANNER CARD 2: Easy to pick up. Impossible to put down. */}
-          <div className="border border-gray-100 flex flex-col justify-between overflow-hidden group shadow-xs">
-            <div className="relative aspect-square bg-neutral-100 overflow-hidden flex-1">
-              <img
-                src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=80"
-                alt="Easy to pick up. Impossible to put down."
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/15 transition-colors duration-300" />
-            </div>
-            <div className="p-5 bg-neutral-900 text-white space-y-3">
-              <p className="font-serif italic text-xs text-neutral-300 leading-relaxed font-light">
-                Easy to pick up. Impossible to put down. Get lost in Glossier You.
-              </p>
-              <button
-                onClick={() => handleCallToOrder(SHOP_PRODUCTS.find(p => p.id === 'sb-9') || SHOP_PRODUCTS[0])}
-                className="inline-block bg-white text-black text-[10px] font-mono tracking-widest uppercase px-4 py-2 font-bold hover:bg-neutral-100 transition-colors duration-150 cursor-pointer"
-              >
-                you smell good.
-              </button>
-            </div>
-          </div>
-
-        </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* 4. Beautiful Interactive Call to Order Modal */}

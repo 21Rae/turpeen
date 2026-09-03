@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sparkles, X, Check, RefreshCw, Shield, Layers, ThumbsUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShopProduct, GoogleAIProductInsight } from '../types';
+import { WhatsAppIcon } from './SocialIcons';
 
 interface GoogleAIProductInsightModalProps {
   product: ShopProduct | null;
@@ -209,13 +210,25 @@ export default function GoogleAIProductInsightModal({
               </div>
             )}
 
-            {/* Bottom Close Action */}
-            <div className="pt-2">
+            {/* Call to Order WhatsApp CTA */}
+            <div className="pt-2 space-y-2">
+              <a
+                id={`ai-review-order-whatsapp-btn-${product.id}`}
+                href={`https://wa.me/2347062296118?text=${encodeURIComponent(
+                  `Hello Turpeen Cosmetics! I was reading the AI Review for "${product.name}" and would like to place an order. Please confirm availability and delivery to my location.`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center space-x-2 shadow-xs active:scale-98 cursor-pointer font-semibold"
+              >
+                <WhatsAppIcon className="w-4 h-4 fill-current" />
+                <span>Call to Order</span>
+              </a>
               <button
                 onClick={onClose}
-                className="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-mono text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
+                className="w-full py-1.5 text-neutral-400 hover:text-neutral-700 font-mono text-[11px] uppercase tracking-wider transition-colors cursor-pointer text-center"
               >
-                Close AI Review
+                Dismiss
               </button>
             </div>
 
