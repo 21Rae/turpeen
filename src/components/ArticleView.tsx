@@ -3,7 +3,6 @@ import { Heart, ArrowLeft, Send, MessageSquare, Share2, BookmarkCheck, Check } f
 import { Article, Product, ArticleContentBlock } from '../types';
 import { GLOSSIER_PRODUCTS } from '../data';
 import { handleImageError, DEFAULT_FALLBACK_IMAGE, parseBlocksFromRow } from '../utils/imageParser';
-import GoogleAIArticleSummary from './GoogleAIArticleSummary';
 
 interface ArticleViewProps {
   article: Article;
@@ -127,7 +126,10 @@ export default function ArticleView({
     <article className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 animate-in fade-in duration-300">
       
       {/* 1. Article Navigation Header (Back / Share / Save) */}
-      <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-6 sm:mb-8">
+      <div 
+        className="sticky z-30 bg-white/95 backdrop-blur-md flex justify-between items-center border-b border-gray-100 py-3.5 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 mb-6 sm:mb-8 transition-all duration-200"
+        style={{ top: 'var(--header-height, 68px)' }}
+      >
         <button
           id="article-back-btn"
           onClick={onBack}
@@ -257,9 +259,6 @@ export default function ArticleView({
             </div>
           </div>
 
-          {/* Google AI Summary Module */}
-          <GoogleAIArticleSummary article={article} />
-
           {/* Rich Content Blocks */}
           <div className="prose prose-neutral max-w-3xl font-serif text-base sm:text-lg text-neutral-800 leading-relaxed space-y-6 pt-2">
             {blocksToRender.map((block, idx) => {
@@ -343,6 +342,28 @@ export default function ArticleView({
                         </p>
                       )}
                     </div>
+                  </div>
+                );
+              }
+
+              if (type === 'list') {
+                const listItems = block.items || (block as any).content || [];
+                return (
+                  <div key={idx} className="my-6 p-5 sm:p-6 bg-neutral-50/80 border border-neutral-150 rounded-sm">
+                    {block.title && (
+                      <h4 className="font-mono text-xs font-bold uppercase tracking-wider text-rose-700 mb-3 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                        {block.title}
+                      </h4>
+                    )}
+                    <ul className="space-y-2.5">
+                      {(Array.isArray(listItems) ? listItems : [String(listItems)]).map((item: string, i: number) => (
+                        <li key={i} className="flex items-start text-sm text-neutral-800 font-light leading-relaxed">
+                          <span className="text-rose-500 font-bold mr-2.5 mt-0.5">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 );
               }

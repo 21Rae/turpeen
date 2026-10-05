@@ -63,6 +63,12 @@ export function parseBlocksFromRow(row: any): ArticleContentBlock[] {
         result.push({ type: 'image', imageUrl, caption });
       } else if (type.includes('product') || type.includes('highlight') || type === 'shop') {
         result.push({ type: 'product-highlight', productName, productBrand, productDesc, imageUrl, text });
+      } else if (type === 'list' || Array.isArray(item.items)) {
+        result.push({
+          type: 'list',
+          title: item.title || text || '',
+          items: Array.isArray(item.items) ? item.items : [text],
+        });
       } else {
         // Fallback paragraph or text block
         result.push({ type: 'paragraph', text: text || (typeof item.text === 'string' ? item.text : JSON.stringify(item)) });

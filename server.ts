@@ -4,6 +4,14 @@ import { createServer as createViteServer } from "vite";
 import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import {
+  executeBlogAgent,
+  startBlogAgentScheduler,
+  getAgentState,
+  toggleAgentEnabled,
+  BEAUTY_SEO_TOPICS,
+  getSupabase
+} from "./api/blogAgent";
 
 dotenv.config();
 
@@ -554,6 +562,63 @@ Return a valid JSON object matching:
   app.post("/api/ai/summarize", handleSummarize);
   app.post("/api/gemini/summarize", handleSummarize);
 
+  // === AI Blog Writing Agent API Routes ===
+  // 1. Get current status, countdown, and execution logs
+  app.get("/api/blog-agent/status", async (req, res) => {
+    try {
+      const state = getAgentState();
+      const supabase = getSupabase();
+      let totalBlogs = 0;
+      if (supabase) {
+        const { count } = await supabase.from('articles').select('*', { count: 'exact', head: true });
+        totalBlogs = count || 0;
+      }
+
+      res.json({
+        ...state,
+        totalBlogsInDb: totalBlogs,
+        hasOpenAiKey: !!process.env.OPENAI_API_KEY,
+        hasGeminiKey: !!process.env.GEMINI_API_KEY,
+        suggestedTopics: BEAUTY_SEO_TOPICS.slice(0, 6)
+      });
+    } catch (err: any) {
+      console.error("Blog Agent Status Error:", err);
+      res.status(500).json({ error: err.message || "Failed to fetch blog agent status" });
+    }
+  });
+
+  // 2. Trigger instant blog creation & publishing
+  app.post("/api/blog-agent/run", async (req, res) => {
+    try {
+      const { topic, category } = req.body || {};
+      const result = await executeBlogAgent({ topic, category });
+      if (!result.success) {
+        return res.status(500).json({ error: result.error || "Blog generation failed" });
+      }
+      res.json({
+        success: true,
+        message: "Blog post successfully generated and published to articles table!",
+        article: result.article,
+        provider: result.provider
+      });
+    } catch (err: any) {
+      console.error("Blog Agent Run Error:", err);
+      res.status(500).json({ error: err.message || "Failed to run blog agent" });
+    }
+  });
+
+  // 3. Toggle scheduler on/off
+  app.post("/api/blog-agent/toggle", (req, res) => {
+    const { enabled } = req.body || {};
+    const updated = toggleAgentEnabled(typeof enabled === 'boolean' ? enabled : true);
+    res.json(updated);
+  });
+
+  // 4. Get list of SEO topics
+  app.get("/api/blog-agent/topics", (req, res) => {
+    res.json({ topics: BEAUTY_SEO_TOPICS });
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -571,6 +636,11 @@ Return a valid JSON object matching:
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
+    
+    // Start automated 2-blogs-a-day schedule (every 12 hours)
+    startBlogAgentScheduler().catch((err) => {
+      console.error("Failed to start Blog Agent scheduler:", err);
+    });
   });
 }
 

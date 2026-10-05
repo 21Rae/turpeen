@@ -10,7 +10,7 @@ export interface Product {
 }
 
 export interface ArticleContentBlock {
-  type: 'paragraph' | 'heading' | 'quote' | 'product-highlight' | 'image';
+  type: 'paragraph' | 'heading' | 'quote' | 'product-highlight' | 'image' | 'list';
   text?: string;
   authorQuote?: string;
   productName?: string;
@@ -18,6 +18,8 @@ export interface ArticleContentBlock {
   productDesc?: string;
   imageUrl?: string;
   caption?: string;
+  title?: string;
+  items?: string[];
 }
 
 export interface Article {

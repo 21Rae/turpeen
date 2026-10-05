@@ -1,16 +1,15 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Search, X, Heart, Menu, Edit3 } from 'lucide-react';
 import { TurpeenIcon, TurpeenWordmark } from './TurpeenLogo';
 import { InstagramIcon, TikTokIcon, WhatsAppIcon, TURPEEN_SOCIAL_LINKS } from './SocialIcons';
 
 interface HeaderProps {
   activeCategory: string | null;
-  setActiveCategory: (category: 'Interviews' | 'Makeup' | 'Skincare' | 'Hair' | null) => void;
+  setActiveCategory: (category: string | null) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  onOpenShop: () => void;
+  onOpenShop: (category?: string) => void;
   onOpenAbout?: () => void;
-  onOpenAIOverview?: () => void;
   onOpenShare: () => void;
   onOpenCreateArticle?: () => void;
   bookmarksCount: number;
@@ -26,7 +25,6 @@ export default function Header({
   setSearchQuery,
   onOpenShop,
   onOpenAbout,
-  onOpenAIOverview,
   onOpenShare,
   onOpenCreateArticle,
   bookmarksCount,
@@ -36,72 +34,28 @@ export default function Header({
 }: HeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
 
-  const categories: ('Interviews' | 'Makeup' | 'Skincare' | 'Hair')[] = [
-    'Interviews',
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        const height = headerRef.current.getBoundingClientRect().height;
+        document.documentElement.style.setProperty('--header-height', `${height}px`);
+      }
+    };
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+    return () => window.removeEventListener('resize', updateHeaderHeight);
+  }, [isSearchOpen]);
+
+  const categories: ('Makeup' | 'Skincare' | 'Hair')[] = [
     'Makeup',
     'Skincare',
     'Hair',
   ];
 
   return (
-    <header className="w-full bg-white border-b border-gray-100 sticky top-0 z-40 transition-all duration-300">
-      {/* Topmost Brand Indicator & Social Bar */}
-      <div className="w-full border-b border-gray-100 py-1.5 px-4 bg-gray-50 text-[10px] tracking-widest font-mono text-gray-500 uppercase flex justify-between items-center">
-        <div className="hidden sm:flex items-center space-x-2 text-[9px] text-gray-400">
-          <span>Lagos Boutique</span>
-          <span>•</span>
-          <span>🇰🇷 🇺🇸 🇬🇧 Curated</span>
-        </div>
-
-        <div className="mx-auto sm:mx-0">
-          <span 
-            onClick={() => {
-              setActiveCategory(null);
-              if (showBookmarksOnly) onShowBookmarks();
-              setSearchQuery('');
-            }}
-            className="font-bold text-black text-sm select-none hover:scale-110 transition-transform duration-200 cursor-pointer"
-          >
-            T
-          </span>
-        </div>
-
-        {/* Header Social Links */}
-        <div className="flex items-center space-x-3 text-gray-500">
-          <a
-            id="header-social-instagram"
-            href={TURPEEN_SOCIAL_LINKS.instagram}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-rose-600 transition-colors"
-            title="Instagram @turpeen_cosmetics"
-          >
-            <InstagramIcon className="w-3.5 h-3.5" />
-          </a>
-          <a
-            id="header-social-tiktok"
-            href={TURPEEN_SOCIAL_LINKS.tiktok}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-black transition-colors"
-            title="TikTok @turpeen_cosmetics"
-          >
-            <TikTokIcon className="w-3.5 h-3.5" />
-          </a>
-          <a
-            id="header-social-whatsapp"
-            href={TURPEEN_SOCIAL_LINKS.whatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-emerald-600 transition-colors"
-            title="WhatsApp Orders"
-          >
-            <WhatsAppIcon className="w-3.5 h-3.5" />
-          </a>
-        </div>
-      </div>
-
+    <header ref={headerRef} className="w-full bg-white border-b border-gray-100 sticky top-0 z-40 transition-all duration-300">
       {/* Main Navigation Row */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex justify-between items-center relative">
         {/* Mobile Menu Toggle */}
@@ -116,23 +70,27 @@ export default function Header({
 
         {/* Left Side Links */}
         <nav className="hidden md:flex items-center space-x-6 text-xs uppercase tracking-widest font-medium text-gray-600">
-          {categories.map((cat) => (
-            <button
-              id={`nav-cat-${cat.toLowerCase()}`}
-              key={cat}
-              onClick={() => {
-                setActiveCategory(activeCategory === cat ? null : cat);
-                if (showBookmarksOnly) onShowBookmarks(); // turn off bookmarks if changing category
-              }}
-              className={`hover:text-black cursor-pointer pb-1 transition-all duration-200 relative ${
-                activeCategory === cat && !showBookmarksOnly && currentView === 'feed'
-                  ? 'text-black font-semibold border-b border-black'
-                  : 'text-gray-500'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+          {categories.map((cat) => {
+            const isCatActive =
+              activeCategory?.toLowerCase() === cat.toLowerCase() && !showBookmarksOnly;
+            return (
+              <button
+                id={`nav-cat-${cat.toLowerCase()}`}
+                key={cat}
+                onClick={() => {
+                  onOpenShop(cat);
+                  if (showBookmarksOnly) onShowBookmarks();
+                }}
+                className={`hover:text-black cursor-pointer pb-1 transition-all duration-200 relative ${
+                  isCatActive
+                    ? 'text-black font-semibold border-b border-black'
+                    : 'text-gray-500'
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
 
           {/* About Navigation Link */}
           {onOpenAbout && (
@@ -146,19 +104,6 @@ export default function Header({
               }`}
             >
               About
-            </button>
-          )}
-
-          {/* AI Review Digest Link */}
-          {onOpenAIOverview && (
-            <button
-              id="nav-ai-digest-btn"
-              onClick={onOpenAIOverview}
-              className="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-rose-50 hover:bg-rose-100/80 text-rose-700 hover:text-rose-900 border border-rose-200/70 text-[10px] font-mono tracking-wider font-semibold transition-all cursor-pointer shadow-2xs"
-              title="AI Review & Daily Digest"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-              <span>AI Review</span>
             </button>
           )}
 
@@ -242,7 +187,7 @@ export default function Header({
           {/* Shop Turpeen Button */}
           <button
             id="shop-glossier-btn"
-            onClick={onOpenShop}
+            onClick={() => onOpenShop()}
             className="bg-black hover:bg-neutral-800 text-white font-mono text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest uppercase px-2.5 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 flex items-center space-x-1 sm:space-x-1.5 shadow-sm active:scale-95 cursor-pointer whitespace-nowrap"
           >
             <TurpeenIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-300" color="currentColor" />
@@ -266,22 +211,26 @@ export default function Header({
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
           </div>
           <div className="flex flex-col space-y-3 text-xs uppercase tracking-widest font-medium text-gray-600">
-            {categories.map((cat) => (
-              <button
-                id={`mobile-nav-cat-${cat.toLowerCase()}`}
-                key={cat}
-                onClick={() => {
-                  setActiveCategory(activeCategory === cat ? null : cat);
-                  if (showBookmarksOnly) onShowBookmarks();
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`text-left py-1 ${
-                  activeCategory === cat && !showBookmarksOnly && currentView === 'feed' ? 'text-black font-semibold' : 'text-gray-500'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const isCatActive =
+                activeCategory?.toLowerCase() === cat.toLowerCase() && !showBookmarksOnly;
+              return (
+                <button
+                  id={`mobile-nav-cat-${cat.toLowerCase()}`}
+                  key={cat}
+                  onClick={() => {
+                    onOpenShop(cat);
+                    if (showBookmarksOnly) onShowBookmarks();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`text-left py-1 ${
+                    isCatActive ? 'text-black font-semibold' : 'text-gray-500'
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
 
             {onOpenAbout && (
               <button
@@ -295,20 +244,6 @@ export default function Header({
                 }`}
               >
                 About
-              </button>
-            )}
-
-            {onOpenAIOverview && (
-              <button
-                id="mobile-nav-ai-digest-btn"
-                onClick={() => {
-                  onOpenAIOverview();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="text-left py-1 text-rose-700 font-semibold flex items-center space-x-1.5"
-              >
-                <span className="w-2 h-2 rounded-full bg-rose-500" />
-                <span>AI Review</span>
               </button>
             )}
 

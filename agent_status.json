@@ -1,0 +1,39 @@
+{
+  "enabled": true,
+  "schedule": "2 blogs every 24 hours (every 12 hours)",
+  "intervalHours": 12,
+  "lastRun": "2026-10-05T08:49:51.386Z",
+  "nextRun": "2026-10-05T20:49:51.386Z",
+  "logs": [
+    {
+      "id": "aa97a49b-47cf-481c-b200-4dba3d45df5c",
+      "title": "Niacinamide vs. Vitamin C: The Ultimate Layering Guide for Bright Skin",
+      "category": "Interviews",
+      "author": "Dr. Folake Adeyemi",
+      "slug": "niacinamide-vs-vitamin-c-layering-guide",
+      "timestamp": "2026-10-05T08:49:51.386Z",
+      "provider": "Gemini (gemini-3.1-flash-lite)",
+      "image_1": "https://i.pinimg.com/736x/f8/ba/c0/f8bac050a033f16c6c903c0313db73ac.jpg"
+    },
+    {
+      "id": "d3122c3e-d62f-4951-91ae-06d10a5878fd",
+      "title": "Skin Barrier 101: 5 Warning Signs Your Moisture Barrier Is Damaged",
+      "category": "Skincare",
+      "author": "Dr. Folake Adeyemi",
+      "slug": "skin-barrier-101-5-warning-signs-damage-ceramides",
+      "timestamp": "2026-10-05T08:46:24.245Z",
+      "provider": "Gemini (gemini-3.1-flash-lite)",
+      "image_1": "https://img.freepik.com/premium-photo/detailed-human-skin-texture-macro-view_38013-48266.jpg?w=2000"
+    },
+    {
+      "id": "44c7027d-3924-406f-90b7-ac28ab609826",
+      "title": "The Ultimate Guide to Glass Skin in Tropical Climates: The 4-Step Routine That Withstands Lagos Heat",
+      "category": "Skincare",
+      "author": "Amara Chukwu",
+      "slug": "the-ultimate-guide-to-glass-skin-in-tropical-climates-the-4-step-routine-that-withstands-lagos-heat",
+      "timestamp": "2026-10-05T08:45:25.711Z",
+      "provider": "Curated Beauty Editorial Engine",
+      "image_1": "https://kbeautynotes.com/wp-content/uploads/2024/06/Korean-Glass-Skin-Routine-1.png"
+    }
+  ]
+}

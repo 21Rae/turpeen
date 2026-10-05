@@ -275,7 +275,7 @@ export default function AboutSection({ onOpenShop, isStandaloneView = false, onB
             {onOpenShop && (
               <button
                 id="about-explore-shop-btn"
-                onClick={onOpenShop}
+                onClick={() => onOpenShop()}
                 className="inline-flex items-center space-x-2 bg-black hover:bg-neutral-800 text-white text-xs font-mono tracking-widest uppercase px-5 py-2.5 transition-all duration-200 cursor-pointer shadow-sm"
               >
                 <ShoppingBag className="w-4 h-4 text-rose-300" />

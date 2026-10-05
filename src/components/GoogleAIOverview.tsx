@@ -364,7 +364,7 @@ export default function GoogleAIOverview({
 
                         {onOpenShop && (
                           <button
-                            onClick={onOpenShop}
+                            onClick={() => onOpenShop()}
                             className="mt-2 text-[10px] font-mono text-rose-300 hover:text-white uppercase tracking-wider flex items-center space-x-1 cursor-pointer"
                           >
                             <span>Shop Formula</span>

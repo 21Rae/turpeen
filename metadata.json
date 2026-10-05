@@ -1,6 +1,6 @@
 {
   "name": "Turpeencosmetic",
-  "description": "An elegant, high-typography beauty and editorial blog for Turpeen Cosmetics with AI Review briefings, real-time database sync, and curated cosmetics shopping.",
+  "description": "An elegant, high-typography beauty and editorial blog for Turpeen Cosmetics with real-time editorial updates, curated skincare & makeup shopping, and Lagos boutique routines.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

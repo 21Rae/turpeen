@@ -10,18 +10,34 @@ import GoogleAIProductInsightModal from './GoogleAIProductInsightModal';
 
 interface ShopViewProps {
   onBack: () => void;
+  initialCategory?: string;
+  onCategoryChange?: (category: string) => void;
 }
 
-export default function ShopView({ onBack }: ShopViewProps) {
+export default function ShopView({
+  onBack,
+  initialCategory = 'SHOP ALL',
+  onCategoryChange,
+}: ShopViewProps) {
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('SHOP ALL');
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    initialCategory ? initialCategory.toUpperCase() : 'SHOP ALL'
+  );
   const [displayCount, setDisplayCount] = useState<number>(36);
   const [selectedProductForOrder, setSelectedProductForOrder] = useState<ShopProduct | null>(null);
   const [selectedAIProduct, setSelectedAIProduct] = useState<ShopProduct | null>(null);
   const [isLiveSyncing, setIsLiveSyncing] = useState<boolean>(true);
   
+  // Sync selected category if initialCategory changes from outside (e.g. Header navigation)
+  useEffect(() => {
+    if (initialCategory) {
+      setSelectedCategory(initialCategory.toUpperCase());
+      setDisplayCount(36);
+    }
+  }, [initialCategory]);
+
   // Callback Request state
   const [callbackPhone, setCallbackPhone] = useState('');
   const [callbackName, setCallbackName] = useState('');
@@ -108,11 +124,20 @@ export default function ShopView({ onBack }: ShopViewProps) {
   const categories = [
     'SHOP ALL',
     'SKINCARE',
+    'MAKEUP',
+    'HAIR',
     'BODY',
     'FRAGRANCE',
     'BALMS',
-    'MAKEUP',
   ];
+
+  const handleCategorySelect = (cat: string) => {
+    setSelectedCategory(cat);
+    setDisplayCount(36);
+    if (onCategoryChange) {
+      onCategoryChange(cat);
+    }
+  };
 
   const handleSwatchSelect = (productId: string, swatchName: string) => {
     setSelectedSwatches(prev => ({
@@ -122,9 +147,44 @@ export default function ShopView({ onBack }: ShopViewProps) {
   };
 
   const filteredProducts = products.filter((p) => {
-    const matchesCategory =
-      selectedCategory === 'SHOP ALL' ||
-      p.category.toLowerCase() === selectedCategory.toLowerCase();
+    const sel = selectedCategory.toUpperCase();
+    const cat = (p.category || '').toLowerCase();
+    const name = (p.name || '').toLowerCase();
+
+    let matchesCategory = false;
+    if (sel === 'SHOP ALL') {
+      matchesCategory = true;
+    } else if (sel === 'SKINCARE') {
+      matchesCategory = cat === 'skincare';
+    } else if (sel === 'MAKEUP') {
+      matchesCategory =
+        cat === 'makeup' ||
+        cat === 'balms' ||
+        name.includes('makeup') ||
+        name.includes('powder') ||
+        name.includes('blush') ||
+        name.includes('lip') ||
+        name.includes('tint') ||
+        name.includes('lash') ||
+        name.includes('brow') ||
+        name.includes('eye');
+    } else if (sel === 'HAIR') {
+      matchesCategory =
+        cat === 'hair' ||
+        name.includes('hair') ||
+        name.includes('scalp') ||
+        name.includes('conditioner') ||
+        name.includes('shampoo') ||
+        name.includes('cantu');
+    } else if (sel === 'BODY') {
+      matchesCategory = cat === 'body';
+    } else if (sel === 'FRAGRANCE') {
+      matchesCategory = cat === 'fragrance';
+    } else if (sel === 'BALMS') {
+      matchesCategory = cat === 'balms' || name.includes('balm') || name.includes('salve');
+    } else {
+      matchesCategory = cat === sel.toLowerCase();
+    }
     
     if (!matchesCategory) return false;
 
@@ -202,30 +262,33 @@ export default function ShopView({ onBack }: ShopViewProps) {
       </div>
 
       {/* 1. Shop Category Nav Bar */}
-      <div className="border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur-xs z-20">
+      <div 
+        className="border-b border-gray-200 sticky z-20 bg-white/95 backdrop-blur-md"
+        style={{ top: 'var(--header-height, 68px)' }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4 py-3 flex-wrap sm:flex-nowrap">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-2.5 sm:py-3 w-full min-w-0">
             
             {/* Category tabs */}
-            <div className="flex space-x-6 overflow-x-auto whitespace-nowrap min-w-max text-xs font-mono uppercase tracking-widest font-semibold text-gray-400 select-none py-1">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => {
-                    setSelectedCategory(cat);
-                    setDisplayCount(36);
-                  }}
-                  className={`hover:text-black transition-all duration-200 relative pb-1 cursor-pointer ${
-                    selectedCategory === cat ? 'text-black border-b-2 border-black font-bold' : ''
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+            <div className="w-full sm:flex-1 min-w-0 overflow-x-auto scrollbar-none py-1">
+              <div className="inline-flex space-x-5 sm:space-x-6 text-xs font-mono uppercase tracking-widest font-semibold text-gray-400 select-none whitespace-nowrap pr-4">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    id={`shop-cat-${cat.toLowerCase().replace(/\s+/g, '-')}`}
+                    onClick={() => handleCategorySelect(cat)}
+                    className={`hover:text-black transition-all duration-200 relative pb-1 cursor-pointer shrink-0 ${
+                      selectedCategory === cat ? 'text-black border-b-2 border-black font-bold' : ''
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Quick Search Input */}
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-full sm:w-64 shrink-0">
               <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -293,7 +356,7 @@ export default function ShopView({ onBack }: ShopViewProps) {
             </p>
             <button
               onClick={() => {
-                setSelectedCategory('SHOP ALL');
+                handleCategorySelect('SHOP ALL');
                 setSearchQuery('');
               }}
               className="px-4 py-2 bg-neutral-900 text-white font-mono text-xs uppercase tracking-widest rounded-lg hover:bg-neutral-800 transition-colors"

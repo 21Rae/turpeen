@@ -22,8 +22,8 @@ import ShareYourRoutine from './components/ShareYourRoutine';
 import ShopView from './components/ShopView';
 import AijayChatbot from './components/AijayChatbot';
 import CreateArticleModal from './components/CreateArticleModal';
+import BlogAgentModal from './components/BlogAgentModal';
 import AboutSection from './components/AboutSection';
-import GoogleAIOverview from './components/GoogleAIOverview';
 import { InstagramIcon, TikTokIcon, WhatsAppIcon, TURPEEN_SOCIAL_LINKS } from './components/SocialIcons';
 import { getSupabase } from './lib/supabase';
 import { parseImagesFromRow, parseBlocksFromRow, parseArticleFromRow } from './utils/imageParser';
@@ -36,7 +36,8 @@ interface CartItem {
 export default function App() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-  const [activeCategory, setActiveCategory] = useState<'Interviews' | 'Makeup' | 'Skincare' | 'Hair' | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [shopCategory, setShopCategory] = useState<string>('SHOP ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
   const [currentView, setCurrentView] = useState<'feed' | 'shop' | 'about'>('feed');
@@ -45,6 +46,7 @@ export default function App() {
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isCreateArticleOpen, setIsCreateArticleOpen] = useState(false);
+  const [isBlogAgentOpen, setIsBlogAgentOpen] = useState(false);
 
   // Lists & stores
   const [userRoutines, setUserRoutines] = useState<UserRoutine[]>([]);
@@ -278,23 +280,30 @@ export default function App() {
 
   // Filters Calculation
   const heroArticle = articles.find(a => a.isHero) || articles[0];
-  const secondaryHeroArticle = articles.find(a => a.isSecondaryHero) || articles[1];
+  const secondaryHeroArticle =
+    articles.find(a => a.isSecondaryHero && a.id !== heroArticle?.id) ||
+    articles.find(a => a.id !== heroArticle?.id) ||
+    articles[1];
 
-  // Articles list (excluding heroes for the "Latest" section, matching layout)
-  const regularLatestArticles = articles.filter(a => !a.isHero && !a.isSecondaryHero && !a.isSidebar);
-  const sidebarArticles = articles.filter(a => a.isSidebar);
+  // All articles list for the scrollable blog feed - ALL blogs appear on the blog page!
+  const regularLatestArticles = articles;
+  const sidebarArticles = articles.filter(a => a.isSidebar).length > 0
+    ? articles.filter(a => a.isSidebar)
+    : articles.slice(0, 4);
 
   // Compute final filtered articles
   const filteredLatestArticles = regularLatestArticles.filter((article) => {
+    const artCat = typeof article.category === 'string' ? article.category : '';
+
     // 1. Category Filter
-    if (activeCategory && article.category !== activeCategory) return false;
+    if (activeCategory && typeof activeCategory === 'string' && artCat.toLowerCase() !== activeCategory.toLowerCase()) return false;
 
     // 2. Search query Filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchTitle = article.title.toLowerCase().includes(q);
-      const matchExcerpt = article.excerpt.toLowerCase().includes(q);
-      const matchCategory = article.category.toLowerCase().includes(q);
+      const matchTitle = (article.title || '').toLowerCase().includes(q);
+      const matchExcerpt = (article.excerpt || '').toLowerCase().includes(q);
+      const matchCategory = artCat.toLowerCase().includes(q);
       if (!matchTitle && !matchExcerpt && !matchCategory) return false;
     }
 
@@ -306,7 +315,7 @@ export default function App() {
 
   // Also filter user routine submission list under the same constraints if no category restricts, or if the search queries match
   const filteredUserRoutines = userRoutines.filter((routine) => {
-    if (activeCategory && activeCategory !== 'Interviews') return false; // Routines are classified under Interviews
+    if (activeCategory) return false;
     if (showBookmarksOnly && !bookmarks.includes(routine.id)) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -320,42 +329,67 @@ export default function App() {
 
   const totalFilteredCount = filteredLatestArticles.length + filteredUserRoutines.length;
 
+  const handleOpenShop = (category?: unknown) => {
+    if (typeof category === 'string' && category.trim().toLowerCase() !== 'interviews') {
+      const catUpper = category.trim().toUpperCase();
+      setShopCategory(catUpper);
+      const formatted = category.trim().charAt(0).toUpperCase() + category.trim().slice(1).toLowerCase();
+      setActiveCategory(formatted);
+    } else {
+      setShopCategory('SHOP ALL');
+      setActiveCategory(null);
+    }
+    setSelectedArticle(null);
+    setCurrentView('shop');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleHeaderCategorySelect = (cat: string | null) => {
+    if (!cat) {
+      setActiveCategory(null);
+      setShopCategory('SHOP ALL');
+      return;
+    }
+
+    if (cat === 'Interviews') {
+      setActiveCategory('Interviews');
+      setSelectedArticle(null);
+      setCurrentView('feed');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Makeup, Skincare, Hair -> Navigate to shop and return products from clicked category
+      handleOpenShop(cat);
+    }
+  };
+
+  const handleShopCategoryChange = (cat: string) => {
+    setShopCategory(cat);
+    if (cat === 'SHOP ALL') {
+      setActiveCategory(null);
+    } else {
+      const formatted = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
+      setActiveCategory(formatted);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white font-sans text-neutral-900 selection:bg-rose-100 selection:text-rose-900 flex flex-col justify-between">
+    <div className="min-h-screen bg-white font-sans text-neutral-900 selection:bg-rose-100 selection:text-rose-900 flex flex-col justify-between overflow-x-hidden w-full max-w-full">
       
       {/* Top Header Row */}
       <Header
         activeCategory={activeCategory}
-        setActiveCategory={(cat) => {
-          setActiveCategory(cat);
-          setSelectedArticle(null); // Return to list view
-          setCurrentView('feed');
-        }}
+        setActiveCategory={handleHeaderCategorySelect}
         searchQuery={searchQuery}
         setSearchQuery={(q) => {
           setSearchQuery(q);
           setSelectedArticle(null); // Return to list view on search
           setCurrentView('feed');
         }}
-        onOpenShop={() => {
-          setSelectedArticle(null);
-          setCurrentView('shop');
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
+        onOpenShop={handleOpenShop}
         onOpenAbout={() => {
           setSelectedArticle(null);
           setCurrentView('about');
           window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
-        onOpenAIOverview={() => {
-          setSelectedArticle(null);
-          setCurrentView('feed');
-          setActiveCategory(null);
-          setSearchQuery('');
-          setTimeout(() => {
-            const el = document.getElementById('google-ai-overview-anchor');
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }, 100);
         }}
         onOpenShare={() => setIsShareOpen(true)}
         onOpenCreateArticle={() => setIsCreateArticleOpen(true)}
@@ -370,17 +404,23 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <main className={`flex-1 w-full overflow-x-hidden ${currentView === 'shop' ? 'max-w-full' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6'}`}>
         
         {currentView === 'shop' ? (
-          <ShopView onBack={() => setCurrentView('feed')} />
+          <ShopView 
+            onBack={() => {
+              setCurrentView('feed');
+              setActiveCategory(null);
+            }}
+            initialCategory={shopCategory}
+            onCategoryChange={handleShopCategoryChange}
+          />
         ) : currentView === 'about' ? (
           <AboutSection 
             isStandaloneView 
             onBackToFeed={() => setCurrentView('feed')} 
             onOpenShop={() => {
-              setCurrentView('shop');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              handleOpenShop();
             }} 
           />
         ) : selectedArticle ? (
@@ -405,22 +445,6 @@ export default function App() {
                 secondaryHeroArticle={secondaryHeroArticle}
                 onSelectArticle={setSelectedArticle}
               />
-            )}
-
-            {/* Google AI Overview • Daily Beauty Digest */}
-            {!activeCategory && !searchQuery && !showBookmarksOnly && (
-              <div id="google-ai-overview-anchor">
-                <GoogleAIOverview
-                  articles={articles}
-                  userRoutines={userRoutines}
-                  onSelectArticle={setSelectedArticle}
-                  onOpenShop={() => {
-                    setSelectedArticle(null);
-                    setCurrentView('shop');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                />
-              </div>
             )}
 
             {/* Main Content splits (Latest vs. Sidebar) */}
@@ -523,6 +547,13 @@ export default function App() {
       <footer className="w-full border-t border-gray-100 bg-white py-12 mt-16 text-center text-xs font-mono tracking-wider uppercase text-gray-400">
         <div className="max-w-7xl mx-auto px-4 space-y-6">
           
+          {/* Boutique Origin & Curation Badge */}
+          <div className="flex justify-center items-center space-x-2 text-[10px] text-gray-400 tracking-widest uppercase font-medium">
+            <span>Lagos Boutique</span>
+            <span>•</span>
+            <span>🇰🇷 🇺🇸 🇬🇧 Curated Cosmetics</span>
+          </div>
+
           {/* Navigation Links */}
           <div className="flex justify-center flex-wrap gap-x-6 gap-y-2 text-[10px]">
             <button
@@ -633,6 +664,18 @@ export default function App() {
         onArticleCreated={(newArticle) => {
           setArticles((prev) => [newArticle, ...prev.filter((a) => a.id !== newArticle.id)]);
         }}
+        onOpenBlogAgent={() => {
+          setIsCreateArticleOpen(false);
+          setIsBlogAgentOpen(true);
+        }}
+      />
+
+      {/* AI Blog Writing Agent Modal (2 blogs / 24 hours schedule) */}
+      <BlogAgentModal
+        isOpen={isBlogAgentOpen}
+        onClose={() => setIsBlogAgentOpen(false)}
+        onSelectArticle={setSelectedArticle}
+        articles={articles}
       />
 
       {/* Aijay Chatbot Widget */}

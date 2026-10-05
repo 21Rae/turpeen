@@ -8,12 +8,14 @@ interface CreateArticleModalProps {
   isOpen: boolean;
   onClose: () => void;
   onArticleCreated: (article: Article) => void;
+  onOpenBlogAgent?: () => void;
 }
 
 export default function CreateArticleModal({
   isOpen,
   onClose,
   onArticleCreated,
+  onOpenBlogAgent,
 }: CreateArticleModalProps) {
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
@@ -174,6 +176,30 @@ export default function CreateArticleModal({
         {errorMsg && (
           <div className="mb-4 p-3 bg-amber-50 text-amber-800 text-xs rounded-lg border border-amber-200">
             {errorMsg}
+          </div>
+        )}
+
+        {/* AI Blog Agent Shortcut Banner */}
+        {onOpenBlogAgent && (
+          <div className="mb-5 p-3.5 bg-neutral-950 text-white rounded-xl border border-neutral-800 flex items-center justify-between shadow-sm">
+            <div className="flex items-center space-x-2.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <div>
+                <span className="text-[11px] font-mono uppercase tracking-wider text-rose-300 font-semibold block">
+                  Automated SEO Blog Agent Active
+                </span>
+                <p className="text-[11px] text-neutral-300 font-light">
+                  Writes & publishes 2 SEO blogs every 24 hours with authentic images automatically.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenBlogAgent}
+              className="text-[10px] font-mono uppercase tracking-wider font-bold bg-white text-black hover:bg-rose-50 px-2.5 py-1.5 rounded transition-colors whitespace-nowrap cursor-pointer"
+            >
+              Open Agent Studio →
+            </button>
           </div>
         )}
 
