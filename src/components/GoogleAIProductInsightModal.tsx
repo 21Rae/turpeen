@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sparkles, X, Check, RefreshCw, Shield, Layers, ThumbsUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShopProduct, GoogleAIProductInsight } from '../types';
+import { handleImageError } from '../utils/imageParser';
 import { WhatsAppIcon } from './SocialIcons';
 
 interface GoogleAIProductInsightModalProps {
@@ -121,6 +122,9 @@ export default function GoogleAIProductInsightModal({
               <img
                 src={product.image}
                 alt={product.name}
+                referrerPolicy="no-referrer"
+                data-fallback={product.images && product.images[1] ? product.images[1] : undefined}
+                onError={handleImageError}
                 className="w-16 h-16 rounded-lg object-cover bg-neutral-100 shrink-0 border border-neutral-200"
               />
               <div>

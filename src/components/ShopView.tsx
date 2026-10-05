@@ -5,7 +5,7 @@ import { TurpeenLogo } from './TurpeenLogo';
 import { WhatsAppIcon, TURPEEN_SOCIAL_LINKS } from './SocialIcons';
 import { ShopProduct } from '../types';
 import { getSupabase } from '../lib/supabase';
-import { parseProductFromRow } from '../utils/imageParser';
+import { parseProductFromRow, handleImageError } from '../utils/imageParser';
 import GoogleAIProductInsightModal from './GoogleAIProductInsightModal';
 
 interface ShopViewProps {
@@ -317,6 +317,8 @@ export default function ShopView({ onBack }: ShopViewProps) {
                         src={product.image}
                         alt={product.name}
                         referrerPolicy="no-referrer"
+                        data-fallback={product.images && product.images[1] ? product.images[1] : undefined}
+                        onError={handleImageError}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
                         loading="lazy"
                       />
@@ -459,6 +461,8 @@ export default function ShopView({ onBack }: ShopViewProps) {
                   src={selectedProductForOrder.image}
                   alt={selectedProductForOrder.name}
                   referrerPolicy="no-referrer"
+                  data-fallback={selectedProductForOrder.images && selectedProductForOrder.images[1] ? selectedProductForOrder.images[1] : undefined}
+                  onError={handleImageError}
                   className="w-16 h-16 object-cover bg-neutral-100 border border-gray-100 shadow-xs"
                 />
                 <div>

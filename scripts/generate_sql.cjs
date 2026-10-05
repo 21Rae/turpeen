@@ -1034,7 +1034,20 @@ function parseItem(raw, index) {
 
   const rating = Number((4.6 + ((index % 5) * 0.08)).toFixed(1));
   const id = `tp-${String(index + 1).padStart(3, '0')}`;
-  const image = pickImage(category, name, index);
+  
+  let image = pickImage(category, name, index);
+  let images = [image];
+  
+  const cachePath = path.join(__dirname, 'product_images_cache.json');
+  if (fs.existsSync(cachePath)) {
+    try {
+      const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      if (cache[id] && cache[id].image) {
+        image = cache[id].image;
+        images = cache[id].images || [image];
+      }
+    } catch (e) {}
+  }
 
   return {
     id,
@@ -1047,7 +1060,7 @@ function parseItem(raw, index) {
     badge,
     badge_type: badgeType,
     image,
-    images: [image],
+    images,
     category,
     origin,
     rating,

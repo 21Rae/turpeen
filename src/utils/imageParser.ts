@@ -185,10 +185,15 @@ export function parseImagesFromRow(row: any): string[] {
 }
 
 /**
- * Image onError helper to automatically swap broken URLs with fallback image
+ * Image onError helper to automatically swap broken URLs with a secondary backup or fallback image
  */
 export function handleImageError(e: SyntheticEvent<HTMLImageElement, Event>) {
   const target = e.currentTarget;
+  const secondary = target.getAttribute('data-fallback');
+  if (secondary && target.src !== secondary) {
+    target.src = secondary;
+    return;
+  }
   if (target.src !== DEFAULT_FALLBACK_IMAGE) {
     target.src = DEFAULT_FALLBACK_IMAGE;
   }
